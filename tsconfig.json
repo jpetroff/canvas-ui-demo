@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "outDir": ".dist/js",
+    "target": "es5",
+    "module": "es6",
+    "jsx": "react",
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "paths": {
+      "@components/*": ["./src/components/*"],
+      "@pages/*": ["./src/demo/pages/*"],
+      "@apps/*": ["./src/demo/apps/*"]
+    }
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./src/**/*.js"
+  ]
+}

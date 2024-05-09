@@ -1,0 +1,11 @@
+.canvas-ui-bg-dotted {
+	background-color: transparent;
+	background-image: radial-gradient(
+		circle at 0px 0px, 
+		var(--canvas-dot-color, #94a3b8) 1px, 
+		transparent 0);
+  background-size: 
+		var(--canvas-ui-grid-step, '4px')
+		var(--canvas-ui-grid-step, '4px');
+	background-position: -1px -1px;
+}
