@@ -9,6 +9,7 @@ interface ICanvasContainerProps extends React.HTMLProps<HTMLElement> {
 	w?: number
 	onMount?: () => void
 	children?: React.ReactNode
+	style?: React.StyleHTMLAttributes<Element>
 }
 
 const CanvasContainer: React.FunctionComponent<ICanvasContainerProps> = (props) => {
@@ -16,6 +17,8 @@ const CanvasContainer: React.FunctionComponent<ICanvasContainerProps> = (props) 
 		if(props.onMount && isFunction(props.onMount)) 
 			props.onMount()
 	})
+
+	console.log(props.style)
 
 	return <div 
 		className={`${props.className || ''} absolute ring-1 ring-offset-0 ring-slate-100 box-border rounded-lg bg-white`}

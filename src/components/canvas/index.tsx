@@ -2,12 +2,14 @@ import './style.css'
 
 import * as React from 'react'
 
-import CanvasContainer from './container';
-import CanvasArea from './canvas-area';
 import defaults from 'lodash/defaults'
-import { extend } from 'lodash';
 
-import Scroller from '@components/scroller';
+import CanvasContainer from './container'
+import CanvasArea from './canvas-area'
+import Scroller from '@components/scroller'
+import LayoutEngine from './libs/layout'
+import { LAYOUT_RULE } from './libs/types'
+
 
 
 interface ICanvasProps extends React.HTMLProps<HTMLElement> {
@@ -17,55 +19,49 @@ interface ICanvasProps extends React.HTMLProps<HTMLElement> {
 	gap?: number
 }
 
-type TCanvasIndex = Array<React.JSX.Element>
-
-interface ICanvasRects {
-	[key: string]: {
-		top: number
-		left: number
-		w: number
-		h?: number
-	}
+interface ICanvasContainerLayout {
+	[key: string]: ICanvasContainerCoords
 }
 
 type NestedComponent<T> = React.FunctionComponent<T> & {
 	Container: typeof CanvasContainer
 }
 
-const Canvas: NestedComponent<ICanvasProps> = (props) => {
-	props = defaults(props, {
+const Canvas: NestedComponent<ICanvasProps> = (_props) => {
+	const props = defaults(_props, {
 		gridStep: 16,
 		minContainerWidth: 20,
 		gap: 2,
 		containers: []
 	})
 
-	const [containerRects, setContainerRects] = React.useState<ICanvasRects>({})
-	const [isLayoutCalculating, setLayoutCalculating] = React.useState(true)
-	const canvasRef = React.useRef(null)
+	const layoutEngine = new LayoutEngine({
+		moduleSize: props.gridStep,
+		layout: LAYOUT_RULE.vertical,
+		moduleGap: 2
+	})
 
-	function _calcLayout(index: number, rects: ICanvasRects, containers: TCanvasIndex) {
-		console.log('Started index:', index, containers)
-		if(index >= 0 && index < containers.length) {
-			return { 
-				top: (props.gap * props.gridStep),
-				left: (props.gridStep * (props.gap * (index+1)  + props.minContainerWidth * index)),
-				w: (containers[index].props.w || (props.minContainerWidth * props.gridStep))
-			}
-		}
-	}
+	const [containerRects, setContainerRects] = React.useState<ICanvasContainerLayout>({})
+	const [isLayoutCalculating, setLayoutCalculating] = React.useState(true)
+	const canvasRef = React.useRef<HTMLDivElement>(null)
+
 
 	function handleContainerMount() {
-		console.log('All mounted')
-		console.log(canvasRef.current)
-		let rects : ICanvasRects = {}
-		props.containers.forEach( (container, index) => {
-			_calcLayout(index, rects, )
-		})
-		setLayoutCalculating(false)
-	}	
+		console.log('mounted fired')
+		let newContainerRects : ICanvasContainerLayout = {}
 
-	console.log('Container rectangles at render:', containerRects);
+		const childContainers = Array.from(canvasRef.current.children)
+		const childrenRects = layoutEngine.calcLayout(
+			layoutEngine.calcContainerBoundingRects(childContainers)
+		)
+
+		childrenRects.map( (element, index) => {
+			newContainerRects[props.containers[index].key] = element
+		})
+
+		setContainerRects(newContainerRects)
+		setLayoutCalculating(false)
+	}
 
 	return <div 
 		className={`
@@ -81,14 +77,13 @@ const Canvas: NestedComponent<ICanvasProps> = (props) => {
 			<CanvasArea ref={canvasRef} onMount={handleContainerMount} isLoading={isLayoutCalculating}>
 				{props.containers.map( (Container) => 
 					{
-						Container.props.style = { 
-							top: (containerRects[Container.key]?.top || 0)+'px',
-							left: (containerRects[Container.key]?.left || 0)+'px'
+						const containerStyle = { 
+							top: containerRects[Container.key]?.moduleY ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleY) : undefined,
+							left: containerRects[Container.key]?.moduleX ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleX) : undefined,
+							width: containerRects[Container.key]?.moduleW ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleW) : undefined,
+							height: containerRects[Container.key]?.moduleH ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleH) : undefined
 						}
-						if(!isLayoutCalculating) {
-							// Container.props.style['w'] = containerRects[Container.key].w + 'px'
-						}
-						return Container
+						return React.cloneElement(Container, { ...Container.props, style: containerStyle}, ...Container.props.children)
 					}
 				)}
 			</CanvasArea>

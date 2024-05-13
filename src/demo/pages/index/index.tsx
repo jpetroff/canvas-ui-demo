@@ -18,8 +18,8 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			<div>Test</div>
 			<div>Second child</div>
 		</Canvas.Container>,
-		<Canvas.Container className='p-4' key='second-form' >
-			<div>Test</div>
+		<Canvas.Container className='p-4 w-96' key='second-form' >
+			<div>Test new</div>
 			<div>Second child</div>
 			<div>Second child</div>
 			<div>Second child</div>

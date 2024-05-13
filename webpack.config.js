@@ -42,6 +42,10 @@ module.exports = (env, argv) => {
       }
     },
 
+    cache: {
+      type: 'memory',
+    },
+
     resolve: {
       roots: [path.join(__dirname, sourceDir)],
       extensions: ['.ts', '.tsx', '.js', '.jsx', '.less', '.html', '.json'],
@@ -50,6 +54,23 @@ module.exports = (env, argv) => {
         '@pages': path.resolve(__dirname, 'src/demo/pages'),
         '@apps': path.resolve(__dirname, 'src/demo/apps'),
       }
+    },
+
+    optimization: {
+      splitChunks: {
+        cacheGroups: {
+          commons: {
+            test(module) {
+              return (
+                module.resource &&
+                /[\\/]node_modules[\\/]/.test(module.resource)
+              )
+            },
+            name: 'libs',
+            chunks: 'all',
+          }
+        },
+      },
     },
   
     module: {
@@ -68,6 +89,7 @@ module.exports = (env, argv) => {
          */
         {
           test: /\.ts(x?)$/,
+          exclude: /(node_modules|favicon)/,
           use: [
             {
               loader: 'ts-loader',
@@ -99,7 +121,7 @@ module.exports = (env, argv) => {
         {
           test: /\.(woff2?|eot|gif|png|jpe?g|webmanifest|xml|svg|ico|mp4)$/,
           loader: 'file-loader',
-          exclude: /assets\/svg/,
+          exclude: /(node_modules|assets\/svg)/,
           options: {
             esModule: false,
             emitFile: true,
@@ -116,6 +138,7 @@ module.exports = (env, argv) => {
          */
         {
           test: /\.css$/i,
+          include: path.resolve(__dirname, 'src'),
           use: ['style-loader', 'css-loader', 'postcss-loader'],
         },
 
@@ -125,6 +148,7 @@ module.exports = (env, argv) => {
         */
         {
           test: /\.html$/,
+          include: path.resolve(__dirname, 'src'),
           use: [
             {
               loader: 'file-loader',

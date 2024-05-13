@@ -74,6 +74,7 @@
         "webpack": "*",
         "webpack-cli": "*",
         "webpack-dev-server": "^5.0.4",
+        "webpack-hot-middleware": "^2.26.1",
         "webpack-livereload-plugin": "*"
     }
 }
