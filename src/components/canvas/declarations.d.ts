@@ -8,5 +8,7 @@ declare interface ICanvasContainerCoords extends ICanvasRect {
 	moduleY?: number
 	moduleW?: number
 	moduleH?: number
+	key: string
+	index: number
 }
 

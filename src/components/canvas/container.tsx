@@ -3,10 +3,11 @@ import { useDidMount } from 'rooks'
 import { isFunction } from 'lodash'
 
 interface ICanvasContainerProps extends React.HTMLProps<HTMLElement> {
-	key: string
+	dataKey?: string
 	top?: number
 	left?: number
 	w?: number
+	h?: number
 	onMount?: () => void
 	children?: React.ReactNode
 	style?: React.StyleHTMLAttributes<Element>
@@ -18,10 +19,8 @@ const CanvasContainer: React.FunctionComponent<ICanvasContainerProps> = (props) 
 			props.onMount()
 	})
 
-	console.log(props.style)
-
-	return <div 
-		className={`${props.className || ''} absolute ring-1 ring-offset-0 ring-slate-100 box-border rounded-lg bg-white`}
+	return <div data-canvas-container={true} data-key={props.dataKey}
+		className={`${props.className || ''} absolute ring-1 ring-offset-0 ring-slate-100 box-border rounded-lg bg-white cursor-grab [&_*]:cursor-auto`}
 		style={props.style}
 	>
 		{props.children}

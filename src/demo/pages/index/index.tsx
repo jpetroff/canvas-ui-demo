@@ -3,7 +3,7 @@ import { RouteObject } from 'react-router-dom'
 import { useLocation, useNavigate, useParams } from 'react-router'
 import Header from '@apps/header'
 import Sidebar from '@apps/sidebar'
-import Canvas from '@components/canvas'
+import Canvas, { TCanvasContainerLayout } from '@components/canvas'
 
 interface IAppProps {
 	router?: RouteObject
@@ -29,11 +29,12 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			<div>Second child</div>
 		</Canvas.Container>
 	]
+	const [containerCoordinates, setContainerCoordinates] = React.useState<TCanvasContainerLayout>([])
 	
 	return <div className="w-screen h-dvh bg-white grid grid-cols-[theme(spacing.64)_1fr] grid-rows-[theme(spacing.16)_1fr]">
 		<Header className="col-span-2" />
 		<Sidebar />
-		<Canvas containers={containers} />
+		<Canvas containers={containers} containerCoordinates={containerCoordinates} onLayoutChange={newLayout => setContainerCoordinates(newLayout)} />
 	</div>
 };
 

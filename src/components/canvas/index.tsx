@@ -1,11 +1,10 @@
 import './style.css'
 
 import * as React from 'react'
-
-import defaults from 'lodash/defaults'
+import { clone, defaults, findIndex, isFunction } from 'lodash'
 
 import CanvasContainer from './container'
-import CanvasArea from './canvas-area'
+import CanvasArea, { DragEventStage, IContainerDragEvent} from './canvas-area'
 import Scroller from '@components/scroller'
 import LayoutEngine from './libs/layout'
 import { LAYOUT_RULE } from './libs/types'
@@ -13,14 +12,20 @@ import { LAYOUT_RULE } from './libs/types'
 
 
 interface ICanvasProps extends React.HTMLProps<HTMLElement> {
-	containers?: React.JSX.Element[]
+	containers: React.JSX.Element[]
+	containerCoordinates: TCanvasContainerLayout
+	onLayoutChange: (newLayout: TCanvasContainerLayout) => void
 	minContainerWidth?: number
-	gridStep?: number
+	moduleSize?: number
 	gap?: number
 }
 
-interface ICanvasContainerLayout {
-	[key: string]: ICanvasContainerCoords
+export type TCanvasContainerLayout = ICanvasContainerCoords[]
+
+type TContainerDragDelta = {
+	key: string,
+	moduledX: number,
+	moduledY: number
 }
 
 type NestedComponent<T> = React.FunctionComponent<T> & {
@@ -29,61 +34,94 @@ type NestedComponent<T> = React.FunctionComponent<T> & {
 
 const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	const props = defaults(_props, {
-		gridStep: 16,
+		moduleSize: 16,
 		minContainerWidth: 20,
-		gap: 2,
-		containers: []
+		gap: 2
 	})
 
 	const layoutEngine = new LayoutEngine({
-		moduleSize: props.gridStep,
+		moduleSize: props.moduleSize,
 		layout: LAYOUT_RULE.vertical,
 		moduleGap: 2
 	})
 
-	const [containerRects, setContainerRects] = React.useState<ICanvasContainerLayout>({})
 	const [isLayoutCalculating, setLayoutCalculating] = React.useState(true)
+	const [contanierDragDelta, setContainerDragDelta] = React.useState<TContainerDragDelta | null>(null)
 	const canvasRef = React.useRef<HTMLDivElement>(null)
 
+	function setContainerCoordinates(coordinates: TCanvasContainerLayout) {
+		if(props.onLayoutChange && isFunction(props.onLayoutChange)) 
+			props.onLayoutChange(coordinates)
+	}
 
 	function handleContainerMount() {
 		console.log('mounted fired')
-		let newContainerRects : ICanvasContainerLayout = {}
+		// let newContainerRects : ICanvasContainerLayout = []
 
 		const childContainers = Array.from(canvasRef.current.children)
 		const childrenRects = layoutEngine.calcLayout(
 			layoutEngine.calcContainerBoundingRects(childContainers)
 		)
 
-		childrenRects.map( (element, index) => {
-			newContainerRects[props.containers[index].key] = element
-		})
-
-		setContainerRects(newContainerRects)
+		setContainerCoordinates(childrenRects)
 		setLayoutCalculating(false)
 	}
 
-	return <div 
-		className={`
-			${props.className || ''} w-full h-full overflow-hidden transform-gpu
-		`}
-	>
-		<style>
-			{`:root {
-				--canvas-ui-grid-step: ${props.gridStep}px;
-			}`}
-		</style>
+	function handleDrag(eventDescriptor: IContainerDragEvent) {
+		const moduledX = 	eventDescriptor.dX >= 0 ? 
+											Math.floor(eventDescriptor.dX / props.moduleSize) :
+											Math.ceil(eventDescriptor.dX / props.moduleSize)
+		const moduledY = 	eventDescriptor.dY >= 0 ? 
+											Math.floor(eventDescriptor.dY / props.moduleSize) :
+											Math.ceil(eventDescriptor.dY / props.moduleSize)
+		if(eventDescriptor.stage != DragEventStage.end) {
+			setContainerDragDelta({
+				key: eventDescriptor.key,
+				moduledX,
+				moduledY
+			})
+		} else {
+			if(props.onLayoutChange && isFunction(props.onLayoutChange)) {
+				const updateContainerCoordinates = clone(props.containerCoordinates)
+				const index = findIndex(updateContainerCoordinates, container => container.key == eventDescriptor.key)
+				updateContainerCoordinates[index].moduleX += moduledX
+				updateContainerCoordinates[index].moduleY += moduledY
+				props.onLayoutChange(updateContainerCoordinates)
+
+				setContainerDragDelta(null)
+			}
+		}
+	}
+
+	return <div className={`${props.className || ''} w-full h-full overflow-hidden transform-gpu`}>
+		<style>{`:root { --canvas-ui-module-size: ${props.moduleSize}px } `}</style>
 		<Scroller className="w-full h-full overflow-auto">
-			<CanvasArea ref={canvasRef} onMount={handleContainerMount} isLoading={isLayoutCalculating}>
-				{props.containers.map( (Container) => 
+			<CanvasArea 
+				moduleSize={props.moduleSize}
+				ref={canvasRef}
+				onMount={handleContainerMount} isLoading={isLayoutCalculating}
+				onContainerDrag={handleDrag}
+			>
+				{props.containers.map( (Container, index) => 
 					{
-						const containerStyle = { 
-							top: containerRects[Container.key]?.moduleY ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleY) : undefined,
-							left: containerRects[Container.key]?.moduleX ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleX) : undefined,
-							width: containerRects[Container.key]?.moduleW ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleW) : undefined,
-							height: containerRects[Container.key]?.moduleH ? layoutEngine.moduleToCSSStyle(containerRects[Container.key].moduleH) : undefined
+						let moduledX = 0
+						let moduledY = 0
+
+						if(
+							contanierDragDelta != null &&
+							Container.key == contanierDragDelta.key
+						) {
+							moduledX = contanierDragDelta.moduledX
+							moduledY = contanierDragDelta.moduledY
 						}
-						return React.cloneElement(Container, { ...Container.props, style: containerStyle}, ...Container.props.children)
+
+						const containerStyle = { 
+							left: props.containerCoordinates[index]?.moduleX ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleX + moduledX) : undefined,
+							top: props.containerCoordinates[index]?.moduleY ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleY + moduledY) : undefined,
+							width: props.containerCoordinates[index]?.moduleW ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleW) : undefined,
+							height: props.containerCoordinates[index]?.moduleH ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleH) : undefined
+						}
+						return React.cloneElement(Container, { ...Container.props, style: containerStyle, key: Container.key, dataKey: Container.key}, ...Container.props.children)
 					}
 				)}
 			</CanvasArea>

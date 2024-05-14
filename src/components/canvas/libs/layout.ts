@@ -1,4 +1,4 @@
-import _, { bind, defaults, extend } from "lodash"
+import { bind, defaults } from "lodash"
 import { ILayoutOptions, LAYOUT_RULE } from "./types"
 import funcHorizontalLayout from './layout-horizontal'
 import funcVerticalLayout from './layout-vertical'
@@ -27,7 +27,7 @@ class LayoutEngine {
 
 	calcContainerBoundingRects(elements: Element[]) : ICanvasContainerCoords[] {
 		let result : ICanvasContainerCoords[] = []
-		elements.map( (element) => {
+		elements.map( (element, index) => {
 
 			const elementBoundingRect = element.getBoundingClientRect()
 			const elementStyleMap = window.getComputedStyle(element)
@@ -41,7 +41,9 @@ class LayoutEngine {
 				moduleY: this.calcTop(elementStyleMap),
 				moduleX: this.calcLeft(elementStyleMap),
 				moduleH: elementNormalizedHeight / this.layoutOptions.moduleSize,
-				moduleW: elementNormalizedWidth / this.layoutOptions.moduleSize
+				moduleW: elementNormalizedWidth / this.layoutOptions.moduleSize,
+				key: element.getAttribute('data-key'),
+				index
 			})
 		})
 		return result
