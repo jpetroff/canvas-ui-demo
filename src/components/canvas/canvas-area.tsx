@@ -107,9 +107,11 @@ const CanvasArea = React.forwardRef<HTMLDivElement, ICanvasAreaProps>((props, re
 	}
 
 	const loadingClass = props.isLoading ? 'opacity-0' : 'opacity-100'
-	const dragUserSelectClass = dragObjectKey != null ? 'select-none cursor-grabbing children-cursor-grabbing' : 'select-auto cursor-auto'
+	const dragUserSelectClass = dragObjectKey != null ? 
+															'canvas-ui-bg-dotted select-none cursor-grabbing children-cursor-grabbing' : 
+															'select-auto cursor-auto'
 	return <div ref={ref}
-		className={`${props.className || ''} ${loadingClass} ${dragUserSelectClass} relative min-w-full min-h-full canvas-ui-bg-dotted`}
+		className={`${props.className || ''} ${loadingClass} ${dragUserSelectClass} relative min-w-full min-h-full`}
 		onMouseDown={handleDragStart}
 		onMouseMove={handleDragMove}
 		onMouseUp={handleDragEnd}

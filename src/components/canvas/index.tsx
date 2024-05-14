@@ -41,7 +41,7 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 
 	const layoutEngine = new LayoutEngine({
 		moduleSize: props.moduleSize,
-		layout: LAYOUT_RULE.vertical,
+		layout: LAYOUT_RULE.horizontal,
 		moduleGap: 2
 	})
 
