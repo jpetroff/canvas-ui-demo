@@ -9,6 +9,8 @@ import createRouter from './routes'
 import { RouterProvider } from 'react-router-dom'
 import { AppContextProvider, getInitAppContext } from './context'
 
+import { Theme } from '@radix-ui/themes'
+
 
 async function main() {
 	const appContext = await getInitAppContext()
@@ -17,9 +19,11 @@ async function main() {
 
 	const root = createRoot(document.getElementById('react-app'))
 	root.render(
-		<AppContextProvider initValue={appContext}>
-			<RouterProvider router={router} />
-		</AppContextProvider>
+		<Theme grayColor='slate' appearance='light' accentColor='violet'>
+			<AppContextProvider initValue={appContext}>
+				<RouterProvider router={router} />
+			</AppContextProvider>
+		</Theme>
 	)
 }
 

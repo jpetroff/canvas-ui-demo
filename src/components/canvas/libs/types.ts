@@ -1,7 +1,8 @@
 export const enum LAYOUT_RULE {
 	horizontal = 'horizontal',
 	vertical = 'vertical',
-	columns = 'columns'
+	columns = 'columns',
+	css = 'css'
 }
 
 export interface ILayoutOptions {

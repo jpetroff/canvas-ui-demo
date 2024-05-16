@@ -1,53 +1,35 @@
 import * as React from 'react'
-import * as Ariakit from '@ariakit/react'
+import { Card, Box, Text, Flex, TextField, CardProps } from '@radix-ui/themes'
 
-interface ITestForm extends React.HTMLProps<HTMLElement> {
+interface ITestForm extends CardProps {
 }
 
 const TestForm: React.FunctionComponent<ITestForm> = (props) => {
-	const form = Ariakit.useFormStore({ defaultValues: { name: "", email: "" } });
-
-  form.useSubmit(async (state) => {
-    alert(JSON.stringify(state.values));
-  });
 
   return (
-    <Ariakit.Form
-      store={form}
-      aria-labelledby="add-new-participant"
-      className="wrapper"
-    >
-      <h2 id="add-new-participant" className="heading">
-        Add new participant
-      </h2>
-      <div className="field">
-        <Ariakit.FormLabel name={form.names.name}>Name</Ariakit.FormLabel>
-        <Ariakit.FormInput
-          name={form.names.name}
-          placeholder="John Doe"
-          className="input"
-          required
-        />
-        <Ariakit.FormError name={form.names.name} className="error" />
-      </div>
-      <div className="field">
-        <Ariakit.FormLabel name={form.names.email}>Email</Ariakit.FormLabel>
-        <Ariakit.FormInput
-          type="text"
-          name={form.names.email}
-          placeholder="johndoe@example.com"
-          className="input"
-          required
-        />
-        <Ariakit.FormError name={form.names.email} className="error" />
-      </div>
-      <div className="buttons">
-        <Ariakit.FormReset className="button secondary reset">
-          Reset
-        </Ariakit.FormReset>
-        <Ariakit.FormSubmit className="button">Add</Ariakit.FormSubmit>
-      </div>
-    </Ariakit.Form>)
+    <Card {...props}>
+      <Flex gap="2" align="center">
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            Name
+          </Text>
+          <TextField.Root
+            defaultValue="Freja Johnsen"
+            placeholder="Enter your full name"
+          />
+        </label>
+        <label>
+          <Text as="div" size="2" mb="1" weight="bold">
+            Email
+          </Text>
+          <TextField.Root
+            defaultValue="freja@example.com"
+            placeholder="Enter your email"
+          />
+        </label>
+      </Flex>
+    </Card>
+    )
 };
 
 export default TestForm;

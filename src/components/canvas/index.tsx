@@ -1,13 +1,14 @@
 import './style.css'
 
 import * as React from 'react'
-import { clone, defaults, findIndex, isFunction } from 'lodash'
+import { clone, defaults, extend, findIndex, isFunction } from 'lodash'
 
 import CanvasContainer from './container'
-import CanvasArea, { DragEventStage, IContainerDragEvent} from './canvas-area'
+import CanvasArea, { DragEventStage, IContainerDragEvent} from './area'
 import Scroller from '@components/scroller'
 import LayoutEngine from './libs/layout'
 import { LAYOUT_RULE } from './libs/types'
+import Placeholder from './placeholder'
 
 
 
@@ -41,13 +42,14 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 
 	const layoutEngine = new LayoutEngine({
 		moduleSize: props.moduleSize,
-		layout: LAYOUT_RULE.horizontal,
+		layout: LAYOUT_RULE.css,
 		moduleGap: 2
 	})
 
 	const [isLayoutCalculating, setLayoutCalculating] = React.useState(true)
 	const [contanierDragDelta, setContainerDragDelta] = React.useState<TContainerDragDelta | null>(null)
 	const canvasRef = React.useRef<HTMLDivElement>(null)
+	const layoutRef = React.useRef<HTMLDivElement>(null)
 
 	function setContainerCoordinates(coordinates: TCanvasContainerLayout) {
 		if(props.onLayoutChange && isFunction(props.onLayoutChange)) 
@@ -55,10 +57,7 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	}
 
 	function handleContainerMount() {
-		console.log('mounted fired')
-		// let newContainerRects : ICanvasContainerLayout = []
-
-		const childContainers = Array.from(canvasRef.current.children)
+		const childContainers = Array.from(layoutRef.current.children)
 		const childrenRects = layoutEngine.calcLayout(
 			layoutEngine.calcContainerBoundingRects(childContainers)
 		)
@@ -93,6 +92,40 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 		}
 	}
 
+	function getDragDeltaCoords(key: string) {
+		if(
+			contanierDragDelta != null &&
+			key == contanierDragDelta.key
+		) {
+			return [contanierDragDelta.moduledX, contanierDragDelta.moduledY]
+		} else {
+			return [0,0]
+		}
+	}
+
+	function getContainerCoordinateProps(containerCoordinates: ICanvasContainerCoords) {
+		if(!containerCoordinates) return {}
+
+		return { 
+			left: layoutEngine.moduleToPx(containerCoordinates.moduleX),
+			top: layoutEngine.moduleToPx(containerCoordinates.moduleY),
+			w: layoutEngine.moduleToPx(containerCoordinates.moduleW),
+			h: layoutEngine.moduleToPx(containerCoordinates.moduleH)
+		}
+	}
+
+	function getDragPlaceholder(dX: number, dY: number, containerCoordinates: ICanvasContainerCoords) {
+		if(!containerCoordinates) return null
+		if(dX == 0 && dY == 0) return null
+
+		return <Placeholder 
+			left={layoutEngine.moduleToPx(containerCoordinates.moduleX + dX)}
+			top={layoutEngine.moduleToPx(containerCoordinates.moduleY + dY)}
+			w={layoutEngine.moduleToPx(containerCoordinates.moduleW)}
+			h={layoutEngine.moduleToPx(containerCoordinates.moduleH)}
+		/>
+	}
+
 	return <div className={`${props.className || ''} w-full h-full overflow-hidden transform-gpu`}>
 		<style>{`:root { --canvas-ui-module-size: ${props.moduleSize}px } `}</style>
 		<Scroller className="w-full h-full overflow-auto">
@@ -102,28 +135,21 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 				onMount={handleContainerMount} isLoading={isLayoutCalculating}
 				onContainerDrag={handleDrag}
 			>
-				{props.containers.map( (Container, index) => 
-					{
-						let moduledX = 0
-						let moduledY = 0
+				<div ref={layoutRef} className={`grid m-auto w-2/3 grid-cols-2 grid-flow-row gap-4`}>
+					{props.containers.map( (Container, index) => 
+						{
+							const [module_dX, module_dY] = getDragDeltaCoords(Container.key)
 
-						if(
-							contanierDragDelta != null &&
-							Container.key == contanierDragDelta.key
-						) {
-							moduledX = contanierDragDelta.moduledX
-							moduledY = contanierDragDelta.moduledY
-						}
+							const newProps = extend(Container.props, getContainerCoordinateProps(props.containerCoordinates[index]))
 
-						const containerStyle = { 
-							left: props.containerCoordinates[index]?.moduleX ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleX + moduledX) : undefined,
-							top: props.containerCoordinates[index]?.moduleY ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleY + moduledY) : undefined,
-							width: props.containerCoordinates[index]?.moduleW ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleW) : undefined,
-							height: props.containerCoordinates[index]?.moduleH ? layoutEngine.moduleToCSSStyle(props.containerCoordinates[index].moduleH) : undefined
+							const dragPlaceholder = getDragPlaceholder(module_dX, module_dY, props.containerCoordinates[index])
+							return [
+								React.cloneElement(Container, { ...newProps, key: Container.key, dataKey: Container.key}, ...Container.props.children),
+								dragPlaceholder
+							]
 						}
-						return React.cloneElement(Container, { ...Container.props, style: containerStyle, key: Container.key, dataKey: Container.key}, ...Container.props.children)
-					}
-				)}
+					)}
+				</div>
 			</CanvasArea>
 		</Scroller>
 	</div>

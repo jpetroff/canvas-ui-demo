@@ -2,6 +2,7 @@ import { bind, defaults } from "lodash"
 import { ILayoutOptions, LAYOUT_RULE } from "./types"
 import funcHorizontalLayout from './layout-horizontal'
 import funcVerticalLayout from './layout-vertical'
+import funcCSSLayout from './layout-css-defined'
 
 
 class LayoutEngine {
@@ -21,6 +22,7 @@ class LayoutEngine {
 		switch(this.layoutOptions.layout) {
 			case LAYOUT_RULE.horizontal: return this.calcLayoutHorizontal(currentCoords);
 			case LAYOUT_RULE.vertical: return this.calcLayoutVertical(currentCoords);
+			case LAYOUT_RULE.css: return this.calcLayoutCSS(currentCoords);
 			default: return currentCoords;
 		}
 	}
@@ -58,6 +60,7 @@ class LayoutEngine {
 
 	private calcLayoutHorizontal = bind(funcHorizontalLayout, this)
 	private calcLayoutVertical = bind(funcVerticalLayout, this)
+	private calcLayoutCSS = bind(funcCSSLayout, this)
 
 	calcTop(elementStyleMap: CSSStyleDeclaration) : number | undefined {
 		const currentTop = elementStyleMap.getPropertyValue('top')
