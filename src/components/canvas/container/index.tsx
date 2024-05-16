@@ -30,7 +30,7 @@ const CanvasContainer= React.forwardRef<HTMLElement, ICanvasContainerProps>((pro
 			containerProps.onMount()
 	})
 
-	containerProps.className = `${containerProps.className || ''} relative cursor-grab [&_*]:cursor-auto`
+	containerProps.className = `${containerProps.className || ''} inline-block relative cursor-grab [&_*]:cursor-auto`
 	const compositionProps = mergeReactProps(containerProps, children.props)
 	const compositionRefs = combinedRef([ref, (children as any).ref])
 
@@ -50,7 +50,7 @@ const CanvasContainer= React.forwardRef<HTMLElement, ICanvasContainerProps>((pro
 		ref: compositionRefs
 	}
 
-	console.log(childrenProps)
+	// console.log(childrenProps)
 	return React.cloneElement(children, childrenProps as any)
 });
 

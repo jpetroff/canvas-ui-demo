@@ -1,5 +1,5 @@
 import { bind, defaults } from "lodash"
-import { ILayoutOptions, LAYOUT_RULE } from "./types"
+import { ICanvasCoordsCollection, ILayoutOptions, LAYOUT_RULE } from "../types"
 import funcHorizontalLayout from './layout-horizontal'
 import funcVerticalLayout from './layout-vertical'
 import funcCSSLayout from './layout-css-defined'
@@ -12,13 +12,13 @@ class LayoutEngine {
 		this.layoutOptions = defaults<any, ILayoutOptions>(opts || {}, {
 			moduleSize: 16,
 			moduleGap: 2,
-			normalizeWidth: true,
+			normalizeWidth: false,
 			normalizeHeight: false,
-			layout: LAYOUT_RULE.horizontal
+			layout: LAYOUT_RULE.css
 		})
 	}
 
-	calcLayout(currentCoords: ICanvasContainerCoords[]) : ICanvasContainerCoords[] {
+	calcLayout(currentCoords: ICanvasCoordsCollection) : ICanvasCoordsCollection {
 		switch(this.layoutOptions.layout) {
 			case LAYOUT_RULE.horizontal: return this.calcLayoutHorizontal(currentCoords);
 			case LAYOUT_RULE.vertical: return this.calcLayoutVertical(currentCoords);
@@ -27,26 +27,36 @@ class LayoutEngine {
 		}
 	}
 
-	calcContainerBoundingRects(elements: Element[]) : ICanvasContainerCoords[] {
-		let result : ICanvasContainerCoords[] = []
+	calcContainerBoundingRects(elements: Element[], parentX: number = 0, parentY: number = 0) : ICanvasCoordsCollection {
+		let result : ICanvasCoordsCollection = {}
 		elements.map( (element, index) => {
 
 			const elementBoundingRect = element.getBoundingClientRect()
+
 			const elementStyleMap = window.getComputedStyle(element)
+
+			const elementKey = element.getAttribute('data-key')
+
+			// console.log(elementKey, elementStyleMap, elementBoundingRect)
+			if(!elementKey) return
 
 			const elementNormalizedHeight = this.normalizeDimensionValue(elementBoundingRect.height)
 			const elementNormalizedWidth = this.normalizeDimensionValue(elementBoundingRect.width)
 
-			result.push({
+			result[elementKey] = {
 				height: this.layoutOptions.normalizeHeight ? elementNormalizedHeight : elementBoundingRect.height,
 				width: this.layoutOptions.normalizeWidth ? elementNormalizedWidth : elementBoundingRect.width,
 				moduleY: this.calcTop(elementStyleMap),
 				moduleX: this.calcLeft(elementStyleMap),
 				moduleH: elementNormalizedHeight / this.layoutOptions.moduleSize,
 				moduleW: elementNormalizedWidth / this.layoutOptions.moduleSize,
-				key: element.getAttribute('data-key'),
-				index
-			})
+				key: elementKey,
+				index,
+				parentOffset: {
+					x: elementBoundingRect.x - parentX,
+					y: elementBoundingRect.y - parentY
+				}
+			}
 		})
 		return result
 	}

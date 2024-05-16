@@ -3,7 +3,8 @@ import { RouteObject } from 'react-router-dom'
 import { useLocation, useNavigate, useParams } from 'react-router'
 import Header from '@apps/header'
 import Sidebar from '@apps/sidebar'
-import Canvas, { TCanvasContainerLayout } from '@components/canvas'
+import Canvas from '@components/canvas'
+import { ICanvasCoordsCollection } from '@components/canvas/types'
 import TestForm from '@apps/test-form'
 import { Card } from '@radix-ui/themes'
 
@@ -17,10 +18,10 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 
 	const containers = [
 		<Canvas.Container key='entry-form'>
-			<TestForm />
+			<TestForm className='p-4' />
 		</Canvas.Container>,
-		<Canvas.Container className='w-96' key='second-form'>
-			<Card>
+		<Canvas.Container key='second-form'>
+			<Card className='p-4'>
 				<div>Test new</div>
 				<div>Second child</div>
 				<div>Second child</div>
@@ -32,7 +33,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			</Card>
 		</Canvas.Container>
 	]
-	const [containerCoordinates, setContainerCoordinates] = React.useState<TCanvasContainerLayout>([])
+	const [containerCoordinates, setContainerCoordinates] = React.useState<ICanvasCoordsCollection>({})
 	
 	return <div className="w-screen h-dvh bg-white grid grid-cols-[theme(spacing.64)_1fr] grid-rows-[theme(spacing.16)_1fr]">
 		<Header className="col-span-2 bg-white min-h-5 border-b border-b-slate-100" />

@@ -10,5 +10,9 @@ declare interface ICanvasContainerCoords extends ICanvasRect {
 	moduleH?: number
 	key: string
 	index: number
+	parentOffset: {
+		x: number,
+		y: number
+	}
 }
 

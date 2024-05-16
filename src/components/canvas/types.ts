@@ -17,3 +17,7 @@ export interface ILayoutOptions {
 	maxH?: number
 	columns?: number
 }
+
+export interface ICanvasCoordsCollection {
+	[key: string]: ICanvasContainerCoords
+}

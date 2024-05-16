@@ -110,7 +110,7 @@ const CanvasArea = React.forwardRef<HTMLDivElement, ICanvasAreaProps>((props, re
 															'canvas-ui-bg-dotted select-none cursor-grabbing children-cursor-grabbing' : 
 															'select-auto cursor-auto'
 	return <div ref={ref}
-		className={`${props.className || ''} ${dragUserSelectClass} relative min-w-full min-h-full`}
+		className={`${props.className || ''} canvas-ui-bg-dotted ${dragUserSelectClass} relative min-w-full min-h-full`}
 		onMouseDown={handleDragStart}
 		onMouseMove={handleDragMove}
 		onMouseUp={handleDragEnd}

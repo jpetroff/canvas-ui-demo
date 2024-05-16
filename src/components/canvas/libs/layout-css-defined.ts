@@ -1,17 +1,18 @@
 import { extend } from "lodash"
+import { ICanvasCoordsCollection } from "../types"
 
-export default function (currentCoords: ICanvasContainerCoords[]): ICanvasContainerCoords[] {
-	const result : ICanvasContainerCoords[] = []
+export default function (currentCoords: ICanvasCoordsCollection): ICanvasCoordsCollection {
+	const result : ICanvasCoordsCollection = {}
 
-	currentCoords.map( (elementCoords, index) => {
+	// currentCoords.map( (elementCoords, index) => {
 
-		result.push(
-			extend(elementCoords, {
-				moduleX: 0,
-				moduleY: 0
-			})
-		)
+	// 	result.push(
+	// 		extend(elementCoords, {
+	// 			moduleX: 0,
+	// 			moduleY: 0
+	// 		})
+	// 	)
 
-	})
-	return result 
+	// })
+	return currentCoords 
 }
