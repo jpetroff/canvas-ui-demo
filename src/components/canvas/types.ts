@@ -1,3 +1,5 @@
+import type { TCanvasContainerElement } from "./container"
+
 export const enum LAYOUT_RULE {
 	horizontal = 'horizontal',
 	vertical = 'vertical',
@@ -21,3 +23,5 @@ export interface ILayoutOptions {
 export interface ICanvasCoordsCollection {
 	[key: string]: ICanvasContainerCoords
 }
+
+export type TChildrenContainers = (HTMLElement & TCanvasContainerElement)[]

@@ -23,6 +23,7 @@ export interface IContainerDragEvent {
 
 export interface ICanvasAreaProps extends React.HTMLProps<HTMLDivElement> {
 	moduleSize: number
+	showGrid?: boolean
 	w?: number
 	h?: number
 	isLoading?: boolean
@@ -33,7 +34,8 @@ export interface ICanvasAreaProps extends React.HTMLProps<HTMLDivElement> {
 
 const CanvasArea = React.forwardRef<HTMLDivElement, ICanvasAreaProps>((props, ref) => {
 	props = defaults(props, {
-		isLoading: false
+		isLoading: false,
+		showGrid: false
 	})
 
 	const [dragObjectKey, setDragObjectKey] = React.useState<string | null>(null)
@@ -102,19 +104,17 @@ const CanvasArea = React.forwardRef<HTMLDivElement, ICanvasAreaProps>((props, re
 		setDragObjectKey(null)
 	}
 
-	function handleMouseLeave() {
-		setDragObjectKey(null)
-	}
+	const showGridClass = props.moduleSize > 4 && props.showGrid ? 'bg-canvas-ui-grid' : ''
 
 	const dragUserSelectClass = dragObjectKey != null ? 
-															'canvas-ui-bg-dotted select-none cursor-grabbing children-cursor-grabbing' : 
+															'select-none cursor-grabbing children-cursor-grabbing' : 
 															'select-auto cursor-auto'
 	return <div ref={ref}
-		className={`${props.className || ''} canvas-ui-bg-dotted ${dragUserSelectClass} relative min-w-full min-h-full`}
+		className={`${props.className || ''} ${dragUserSelectClass} ${showGridClass} relative min-w-full min-h-full`}
 		onMouseDown={handleDragStart}
 		onMouseMove={handleDragMove}
 		onMouseUp={handleDragEnd}
-		onMouseLeave={handleMouseLeave}
+		onMouseLeave={handleDragEnd}
 	>
 		{props.children}
 	</div>

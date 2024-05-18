@@ -13,7 +13,8 @@ const Placeholder: React.FunctionComponent<IPlaceholderProps> = (props) => {
 		top: props.top ? props.top+'px' : null,
 		left: props.left ? props.left+'px' : null,
 		width: props.w ? props.w+'px' : null,
-		height: props.h ? props.h+'px' : null
+		height: props.h ? props.h+'px' : null,
+		zIndex: 999999
 	})
 
 	return <div 

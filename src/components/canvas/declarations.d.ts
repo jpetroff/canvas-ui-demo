@@ -14,5 +14,8 @@ declare interface ICanvasContainerCoords extends ICanvasRect {
 		x: number,
 		y: number
 	}
+	boundTo?: string
+	isAbsolute?: boolean
+	connectTo?: string
 }
 

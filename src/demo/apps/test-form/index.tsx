@@ -8,7 +8,7 @@ const TestForm: React.FunctionComponent<ITestForm> = (props) => {
 
   return (
     <Card {...props}>
-      <Flex gap="2" align="center">
+      <Flex direction="column" gap="2">
         <label>
           <Text as="div" size="2" mb="1" weight="bold">
             Name
