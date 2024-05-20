@@ -21,7 +21,7 @@ export interface IContainerDragEvent {
 	dY: number
 }
 
-export interface ICanvasAreaProps extends React.HTMLProps<HTMLDivElement> {
+export interface IAreaProps extends React.HTMLProps<HTMLDivElement> {
 	moduleSize: number
 	showGrid?: boolean
 	w?: number
@@ -32,7 +32,7 @@ export interface ICanvasAreaProps extends React.HTMLProps<HTMLDivElement> {
 	onCanvasDrag?: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void
 }
 
-const CanvasArea = React.forwardRef<HTMLDivElement, ICanvasAreaProps>((props, ref) => {
+const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 	props = defaults(props, {
 		isLoading: false,
 		showGrid: false
@@ -120,4 +120,6 @@ const CanvasArea = React.forwardRef<HTMLDivElement, ICanvasAreaProps>((props, re
 	</div>
 });
 
-export default CanvasArea;
+Area.displayName = 'Canvas.Area'
+
+export default Area;

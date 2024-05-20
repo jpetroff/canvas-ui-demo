@@ -42,6 +42,12 @@ module.exports = (env, argv) => {
       }
     },
 
+    plugins: [
+      new webpack.DefinePlugin({
+        "process.env.NODE_ENV": JSON.stringify("development")
+      })      
+    ],
+
     cache: {
       type: 'memory',
     },

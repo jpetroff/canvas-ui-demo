@@ -1,9 +1,6 @@
 import type { TCanvasContainerElement } from "./container"
 
 export const enum LAYOUT_RULE {
-	horizontal = 'horizontal',
-	vertical = 'vertical',
-	columns = 'columns',
 	css = 'css'
 }
 
@@ -20,8 +17,42 @@ export interface ILayoutOptions {
 	columns?: number
 }
 
-export interface ICanvasCoordsCollection {
+export type TContainerCoordCollection = {
 	[key: string]: ICanvasContainerCoords
 }
 
-export type TChildrenContainers = (HTMLElement & TCanvasContainerElement)[]
+export type TContainerList = (HTMLElement & TCanvasContainerElement)[]
+
+export type TConnectorDescription = {
+	from: string,
+	to: string
+}
+export type TConnectorDescriptionList = Array<TConnectorDescription>
+
+export enum ConnectorAttachmentType {
+	top = 't',
+	bottom = 'b',
+	left = 'l',
+	right = 'r',
+	topLeft = 'tl',
+	topRight = 'tr',
+	bottomLeft = 'bl',
+	bottomRight = 'br'
+}
+
+export type TConnectorPoint = {
+	x: number,
+	y: number,
+	vector: ConnectorAttachmentType
+}
+
+export type TDefinedConnectorCoords = {
+	start: TConnectorPoint,
+	end: TConnectorPoint,
+	top: number,
+	left: number,
+	w: number, 
+	h: number
+} & TConnectorDescription
+
+export type TDefinedConnectorList = Array<TDefinedConnectorCoords>

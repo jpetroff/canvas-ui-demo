@@ -1,5 +1,5 @@
-import { ICanvasCoordsCollection } from "../types"
+import { TContainerCoordCollection } from "../types"
 
-export default function (currentCoords: ICanvasCoordsCollection): ICanvasCoordsCollection {
+export default function (currentCoords: TContainerCoordCollection): TContainerCoordCollection {
 	return currentCoords 
 }
