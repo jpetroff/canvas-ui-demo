@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { isEqual } from 'lodash'
-import { TConnectorPoint } from '../types'
 import { bezierControlPoint } from '../libs/utils'
 
 export type IConnectorProps = {
@@ -12,11 +11,22 @@ export type IConnectorProps = {
 	end: TConnectorPoint,
 }
 
+export enum ConnectorAttachmentType {
+	top = 't',
+	bottom = 'b',
+	left = 'l',
+	right = 'r',
+	topLeft = 'tl',
+	topRight = 'tr',
+	bottomLeft = 'bl',
+	bottomRight = 'br'
+}
+
 const Connector = React.memo<IConnectorProps>( 
 	(props) => {
 		const ref = React.useRef(null)
 
-		const padding = 8
+		const padding = 16
 
 		const top = props.top - padding
 		const left = props.left - padding

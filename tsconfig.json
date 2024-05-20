@@ -8,6 +8,8 @@
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "allowJs": true,
+    "skipLibCheck": true,
     "paths": {
       "@components/*": ["./src/components/*"],
       "@pages/*": ["./src/demo/pages/*"],

@@ -5,7 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router'
 import Header from '@apps/header'
 import Sidebar from '@apps/sidebar'
 import Canvas from '@components/canvas'
-import type { TContainerCoordCollection, TConnectorDescription, TConnectorDescriptionList } from '@components/canvas/types'
+// import type { TContainerCoordCollection, TConnectorDescription, TConnectorDescriptionList } from '@components/canvas/types'
 import TestForm from '@apps/test-form'
 
 import { Card, Text, Box, Button } from '@radix-ui/themes'
@@ -44,15 +44,15 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 		<Canvas.Container canvasKey='entry-form-4' key='entry-form-4'>
 			<TestForm className='p-4' />
 		</Canvas.Container>,
-		<Canvas.Container isExtra={true} boundTo='entry-form-3' canvasKey='entry-form-3-note' key='entry-form-3-note'>
+		<Canvas.Container isExtra={true} canBound={true} boundTo='entry-form-3' canvasKey='entry-form-3-note' key='entry-form-3-note'>
 			<Box className='absolute bg-yellow-200 rounded-md w-[96px] h-[96px] shadow-md flex items-center text-center text-sm'>Don’t forget this</Box>
 		</Canvas.Container>,
-		<Canvas.Container isExtra={true} boundTo='entry-form-3' canvasKey='entry-form-2-comment' key='entry-form-2-comment' top={10} left={24} >
+		<Canvas.Container isExtra={true} canBound={true} canvasKey='entry-form-2-comment' key='entry-form-2-comment' top={10} left={24} >
 			<CommentBubble initials='J' />
 		</Canvas.Container>
 	])
-	const [containerCoordinates, setContainerCoordinates] = React.useState<TContainerCoordCollection>({})
-	const [connectors, setConnectors] = React.useState<TConnectorDescriptionList>([
+	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorPropCollection>({})
+	const [connectors, setConnectors] = React.useState<TConnectorPathList>([
 		{from: 'entry-form', to: 'entry-form-2'},
 		{from: 'second-form#option1', to: 'entry-form-4'}
 	])

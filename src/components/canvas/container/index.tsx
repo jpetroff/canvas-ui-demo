@@ -1,5 +1,5 @@
 /* 
-	Renders as shild — see https://medium.com/@bryanmylee/aschild-in-react-svelte-vue-and-solid-for-render-delegation-645c73650ced
+	Renders as child — see https://medium.com/@bryanmylee/aschild-in-react-svelte-vue-and-solid-for-render-delegation-645c73650ced
  */
 
 import * as React from 'react'
@@ -18,6 +18,7 @@ export interface ICanvasContainerProps extends React.HTMLProps<HTMLElement> {
 	children?: React.ReactElement
 	isExtra?: boolean,
 	boundTo?: string
+	canBound?: boolean
 }
 
 const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, ref) => {
@@ -26,6 +27,7 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 		canvasKey, 
 		isExtra, 
 		boundTo,
+		canBound,
 		...containerProps
 	} = props
 
@@ -52,10 +54,9 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 		['data-key']: canvasKey,
 		['data-canvas-container']: true,
 		['data-canvas-absolute']: isExtra,
-		['data-canvas-bound']: boundTo || undefined
+		['data-canvas-bound']: boundTo || undefined,
+		['data-canvas-allow-bound']: !!canBound || undefined,
 	}, compositionProps)
-
-	if(props.canvasKey == 'entry-form-2-comment') console.log(fullProps)
 
 	const childrenProps = {
 		...fullProps,

@@ -1,29 +1,28 @@
 import './style.css'
 
 import * as React from 'react'
-import { clone, defaults, defer, extend, find, findIndex, isEqual, isFunction, map, mapValues, omit, each } from 'lodash'
+import { reduce, isFunction, map, each, pick, transform } from 'lodash'
+
+import Scroller from '@components/scroller'
+
+import type { TCanvasContainerElement } from './container'
 
 import Container, { ICanvasContainerProps } from './container'
-import type { TCanvasContainerElement } from './container'
 import Area, { DragEventStage, IContainerDragEvent} from './area'
-import Scroller from '@components/scroller'
-import LayoutEngine from './libs/layout'
-import { LAYOUT_RULE } from './types'
-import type { TConnectorDescription, TConnectorDescriptionList, TContainerCoordCollection } from './types'
+import LayoutEngine, { LAYOUT_RULE } from './libs/layout'
 import Placeholder from './placeholder'
 import Connector from './connector'
 import Section from './section'
 
 
-
 interface ICanvasProps extends React.HTMLProps<HTMLElement> {
 	containers: React.ReactElement<TCanvasContainerElement>[]
-	containerCoordinates: TContainerCoordCollection
-	connectors: TConnectorDescriptionList
-	onLayoutChange: (newLayout: TContainerCoordCollection) => void
-	minContainerWidth?: number
+	containerCoordinates: IContainerDescriptorPropCollection
+	connectors: TConnectorPathList
+	onLayoutChange: (newLayout: IContainerDescriptorPropCollection) => void
 	moduleSize?: number
 	gap?: number
+
 	layoutWrapperClass?: string
 	placeholderDrag?: React.ReactElement
 }
@@ -43,7 +42,6 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 
 	const props = {
 		moduleSize: 4,
-		minContainerWidth: 4,
 		gap: 2,
 		placeholderDrag: <Placeholder />,
 		layoutWrapperClass: `grid w-2/3 m-auto grid-cols-2 gap-4 p-4 items-start`,
@@ -53,29 +51,39 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	const [isLayoutCalculating, setLayoutCalculating] = React.useState(false)
 	const [containerDragKey, setContainerDragKey] = React.useState(null)
 	const [connectors, setConnectors] = React.useState(null)
+	const [descriptors, setDescriptors] = React.useState(null)
 
 	const canvasRef = React.useRef<HTMLDivElement>(null)
 	const layoutRef = React.useRef<HTMLDivElement>(null)
 	const extrasRef = React.useRef<HTMLDivElement>(null)
 	const connectorsRef = React.useRef<HTMLDivElement>(null)
-	const LE = React.useRef(new LayoutEngine())
+	const LE = new LayoutEngine()
 
 
-	LE.current.setOptions({
+	LE.setOptions({
 		moduleSize: props.moduleSize,
 		layout: LAYOUT_RULE.css,
 		moduleGap: 2
 	})
 
-	LE.current.storeCoordsCollection(props.containerCoordinates)
-
-	const containerDragDelta = React.useRef<TContainerDragDelta>(null)
+	// const containerDragDelta = React.useRef<TContainerDragDelta>(null)
 	const containerDragPlaceholderRef = React.useRef(null)
 
-	function updateContainerCoordinates(coordinates: TContainerCoordCollection) {
+	function updateContainerCoordinates(newContainerDescriptorCollection: TContainerDescriptorCollection) {
+		console.log('Update fired', newContainerDescriptorCollection)
+		setDescriptors(newContainerDescriptorCollection)
 		if(props.onLayoutChange && isFunction(props.onLayoutChange)) {
-			console.log('Update fired')
-			props.onLayoutChange(coordinates)
+
+			const newPropValue = transform<TContainerDescriptorCollection, IContainerDescriptorPropCollection>(
+				newContainerDescriptorCollection, 
+				(result, container) => {
+					result[container.key] = pick(container, ['relative', 'boundToContainer'])
+					return result
+				}, 
+				{})
+
+			props.onLayoutChange(newPropValue)
+
 		} else {
 			console.warn('Canvas onLayoutChange is not defined as function: cannot save layout changes')
 		}
@@ -84,103 +92,112 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	function onMount() {}
 
 	React.useLayoutEffect( () => {
-	// function onMount() {
-
 		console.log('------------------- from effect ----------------')
 
 		const childContainers = [ 
 			...Array.from(layoutRef.current.querySelectorAll(`[data-canvas-container]`)), 
 			...Array.from(extrasRef.current.querySelectorAll(`[data-canvas-container]`))
-		]
-		const parentContainerBoundingRects = canvasRef.current.getBoundingClientRect()
+		] as (HTMLElement & TCanvasContainerElement)[]
 
-		const newContainerCoordCollection = LE.current.calcContainerBoundingRects(
-			childContainers as (HTMLElement & TCanvasContainerElement)[], 
-			parentContainerBoundingRects.x, 
-			parentContainerBoundingRects.y
+		// const parentContainerBoundingRects = canvasRef.current.getBoundingClientRect()
+
+		const currentBoundingRects = LE.calcBoundingRects(childContainers)
+
+		const newContainerDescriptorCollection = LE.calcLayout(
+			currentBoundingRects,
+			props.containerCoordinates
 		)
 
-		// console.log(prevContainerCoordCollection)
-		// console.log(newContainerCoordCollection)
-		const layoutUnchanged = LE.current.isSameLayout(newContainerCoordCollection)
-		console.log(layoutUnchanged)
+		const layoutChanged = LE.needLayoutUpdate(descriptors, newContainerDescriptorCollection)
+		console.log(layoutChanged)
 
-		if(!layoutUnchanged) {
-			// const adjustedCoords = LE.current.calcLayout(newContainerCoordCollection)		
-			// LE.current.storeCoordsCollection(newContainerCoordCollection)
-			
-			updateContainerCoordinates(newContainerCoordCollection)
+		if(layoutChanged) {
+			updateContainerCoordinates(newContainerDescriptorCollection)
 		}		
 	})
 
 	function handleDrag(eventDescriptor: IContainerDragEvent) {
-		const moduledX = 	eventDescriptor.dX >= 0 ? 
+		const module_dX = 	eventDescriptor.dX >= 0 ? 
 											Math.floor(eventDescriptor.dX / props.moduleSize) :
 											Math.ceil(eventDescriptor.dX / props.moduleSize)
-		const moduledY = 	eventDescriptor.dY >= 0 ? 
+		const module_dY = 	eventDescriptor.dY >= 0 ? 
 											Math.floor(eventDescriptor.dY / props.moduleSize) :
 											Math.ceil(eventDescriptor.dY / props.moduleSize)
 
-		if(moduledX == 0 && moduledY == 0) return
+		if(module_dX == 0 && module_dY == 0) return
+
+		const dX = module_dX * props.moduleSize
+		const dY = module_dY * props.moduleSize
 
 		if(eventDescriptor.stage == DragEventStage.start) {
 			setContainerDragKey(eventDescriptor.key)
 		}
 
 		if(eventDescriptor.stage != DragEventStage.end) {
-
-			containerDragDelta.current = {
-				key: eventDescriptor.key,
-				moduledX,
-				moduledY
-			}
-
-			LE.current.updateDragPlaceholder(
+			LE.updateDragPlaceholder(
+				dX, dY,
 				eventDescriptor.key, 
-				containerDragPlaceholderRef,
-				moduledX, moduledY,
-				props.containerCoordinates
+				descriptors,
+				containerDragPlaceholderRef
 			)
-
 		} else if( eventDescriptor.stage == DragEventStage.end ) {
-			let newContainerCoordinates : TContainerCoordCollection = {}
 			console.log('------------------- from drag ----------------')
-			each(clone(props.containerCoordinates), (container) => {
-				if(
-					container.key == eventDescriptor.key
-				) {
-					console.log(container, moduledX, moduledY)
-					container.moduleX += moduledX
-					container.moduleY += moduledY
-					console.log(container)
+			const newContainerCoordinates = transform(descriptors, 
+				(result, _container) => {
+					const container = _container
+					console.log(_container.key, _container.boundToContainer, eventDescriptor.key)
+					if(
+						_container.key == eventDescriptor.key ||
+						_container.boundToContainer == eventDescriptor.key
+					) {
+						console.log('Updated container', eventDescriptor.key)
+						container.relative.left = container.relative.left + dX
+						container.relative.top = container.relative.top + dY
+					}
+					result[container.key] = container
+					return container
+				}, {})
+
+				//experimental
+				let boundKey = null
+				const _allContainers = canvasRef.current.querySelectorAll(`[data-canvas-container]`)
+				_allContainers.forEach( (container) => {
+					const rects = container.getBoundingClientRect()
+					console.log(
+						`mouse:`, eventDescriptor.event.clientX,eventDescriptor.event.clientY,
+						`container`,  rects.left , rects.top, rects.left + rects.width, rects.top + rects.height,
+						container.getAttribute('data-key')
+					)
+					if(
+						(eventDescriptor.event.clientX > rects.left) &&
+						(eventDescriptor.event.clientX < rects.left + rects.width) &&
+						(eventDescriptor.event.clientY > rects.top ) &&
+						(eventDescriptor.event.clientY < rects.top + rects.height) && 
+						!container.getAttribute('data-canvas-allow-bound')
+					) {
+						boundKey = container.getAttribute('data-key')
+					}
+				})
+
+				console.log(boundKey)
+
+				if(newContainerCoordinates[eventDescriptor.key].canBeBound && boundKey) {
+					newContainerCoordinates[eventDescriptor.key].boundToContainer = boundKey
+				} else {
+					newContainerCoordinates[eventDescriptor.key].boundToContainer = null
 				}
-				newContainerCoordinates[container.key] = container
-			})
 
-			each(newContainerCoordinates, (container) => {
-				if (
-					container.boundTo == eventDescriptor.key
-				) {
-					console.log(container, moduledX, moduledY)
-					container.parentOffset.x = newContainerCoordinates[eventDescriptor.key].parentOffset.x + LE.current.moduleToPx(newContainerCoordinates[eventDescriptor.key].moduleX)
-					container.parentOffset.y = newContainerCoordinates[eventDescriptor.key].parentOffset.y + LE.current.moduleToPx(newContainerCoordinates[eventDescriptor.key].moduleY)
-				}
-				newContainerCoordinates[container.key] = container
-			})
+				updateContainerCoordinates(newContainerCoordinates)
 
-			console.log(moduledX, moduledY)
-			console.log(props.containerCoordinates[eventDescriptor.key], newContainerCoordinates[eventDescriptor.key])
-			updateContainerCoordinates(newContainerCoordinates)
-
-			LE.current.hideDragContainer(containerDragPlaceholderRef)
-			setContainerDragKey(null)
-		}
+				LE.hideDragContainer(containerDragPlaceholderRef)
+				setContainerDragKey(null)
+			}
 	}
 
 	const createConnectors = () => {
 		let result : React.ReactElement[] = []
 
-		map(LE.current.createConnectors(props.connectors, canvasRef), (props) => {
+		map(LE.createConnectors(props.connectors, canvasRef.current), (props) => {
 			const {from, to, ...elemProps} = props
 			result.push(<Connector {...elemProps} key={`${from}~${to}`} />)
 		})
@@ -202,14 +219,14 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 					{props.containers.map( 
 						(container) => {
 							if(!(container.props as ICanvasContainerProps).isExtra)
-								return LE.current.prepareElementRender(container, props.containerCoordinates)
+								return LE.prepareElementRender(container, props.containerCoordinates)
 						}
 					)}
 				</div>
 
 				<div data-canvas-section={`extras`} ref={extrasRef} className='absolute top-0 left-0'>
 					{props.containers.map( 
-						container => (container.props as ICanvasContainerProps).isExtra && LE.current.prepareElementRender(container, props.containerCoordinates)
+						container => (container.props as ICanvasContainerProps).isExtra && LE.prepareElementRender(container, props.containerCoordinates)
 					)}
 				</div>
 
@@ -217,7 +234,7 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 					{connectors}
 				</div>
 
-				{LE.current.createDragPlaceholder(props.placeholderDrag, containerDragPlaceholderRef)} 
+				{LE.createDragPlaceholder(props.placeholderDrag, containerDragPlaceholderRef)} 
 			</Area>
 		</Scroller>
 	</div>

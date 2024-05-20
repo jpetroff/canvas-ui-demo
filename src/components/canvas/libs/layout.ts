@@ -1,16 +1,32 @@
 import * as React from 'react'
-import { bind, defaults, each, extend, clone, isObject, min } from "lodash"
-import { ConnectorAttachmentType, LAYOUT_RULE } from "../types"
-import funcCSSLayout from './layout-css-defined'
-import type { TContainerCoordCollection, ILayoutOptions, TConnectorDescriptionList, TDefinedConnectorList } from "../types"
-import type {TCanvasContainerElement} from '../container'
-import type {IConnectorProps} from '../connector'
-import { calcConnectorPoints, filterOverlappingPoints, filterPoints, findClosestPoints, getRoundedCoords } from './utils'
+import { bind, defaults, each, extend, clone, isObject, min, map, reduce, find } from "lodash"
+// import funcCSSLayout from './layout-css-defined'
+import type {ICanvasContainerProps, TCanvasContainerElement} from '../container'
+import { ConnectorAttachmentType } from '../connector'
+import { _f, calcConnectorPoints, filterOverlappingPoints, filterPoints, findClosestPoints, getRoundedCoords } from './utils'
+import { isAbsolute } from 'path'
 
+
+export const enum LAYOUT_RULE {
+	css = 'css'
+}
+
+declare interface ILayoutOptions {
+	moduleSize?: number
+	layout?: LAYOUT_RULE
+	moduleGap?: number
+	normalizeWidth?: boolean
+	normalizeHeight?: boolean
+	minW?: number
+	minH?: number
+	maxW?: number
+	maxH?: number
+	columns?: number
+}
 
 class LayoutEngine {
 	private layoutOptions: ILayoutOptions
-	private previousCoordsCollection: TContainerCoordCollection
+	private previousCoordsCollection: TContainerDescriptorCollection
 
 	constructor(opts?: ILayoutOptions) {
 		this.setOptions(opts)
@@ -26,16 +42,8 @@ class LayoutEngine {
 		})
 	}
 
-	storeCoordsCollection(coords: TContainerCoordCollection) {
-		this.previousCoordsCollection = coords
-	}
-
-	retrieveCoordsCollection() {
-		return this.previousCoordsCollection
-	}
-
-	isSameLayout(newContainerCoordsCollection: any) : boolean {
-		if(!this.previousCoordsCollection || !isObject(this.previousCoordsCollection)) return false
+	needLayoutUpdate(collectionA: TContainerDescriptorCollection, collectionB: TContainerDescriptorCollection) : boolean {
+		if(!isObject(collectionA) || !isObject(collectionB)) return true
 
 		function deepEqual(object1, object2, prefix = '') {
 			const keys1 = Object.keys(object1)
@@ -66,45 +74,115 @@ class LayoutEngine {
 			return true
 		}
 
-		return deepEqual(this.previousCoordsCollection, newContainerCoordsCollection)
+		return !deepEqual(collectionA, collectionB)
 	}
 
-	calcLayout(currentCoords: TContainerCoordCollection) : TContainerCoordCollection {
-		switch(this.layoutOptions.layout) {
-			case LAYOUT_RULE.css: return this.calcLayoutCSS(currentCoords);
-			default: return currentCoords;
-		}
-	}
-
-	getContainerCoordinateProps(key: string, coordsCollection: TContainerCoordCollection) {
-		const containerCoordinates = coordsCollection[key]
-		if(!containerCoordinates) return {}
-
-		if(containerCoordinates.isAbsolute) {
-			return { 
-				left: this.moduleToPx(containerCoordinates.moduleX || 0) + containerCoordinates.parentOffset.x,
-				top: this.moduleToPx(containerCoordinates.moduleY || 0) + containerCoordinates.parentOffset.y
+	calcBoundingRects(elements: (HTMLElement & TCanvasContainerElement)[]) : TContainerRect[] {
+		return reduce(elements, (result, element, index) => {
+			const key = element.getAttribute('data-key')
+			const boundingRect = element.getBoundingClientRect()
+			if(key) {
+				result.push({
+					key: element.getAttribute('data-key'),
+					index,
+					left: _f(element.offsetLeft),
+					top: _f(element.offsetTop),
+					width: _f(boundingRect.width),
+					height: _f(boundingRect.height),
+					isAbsolute: !!element.getAttribute('data-canvas-absolute') || void 0,
+					canBeBound: !!element.getAttribute('data-canvas-allow-bound') || void 0,
+					boundToContainer: element.getAttribute('data-canvas-bound') || void 0
+				})
 			}
+
+			return result
+		}, [])
+	}
+
+	calcLayout(
+		currentBoundingRects : TContainerRect[], 
+		userProps: IContainerDescriptorPropCollection,
+	) : TContainerDescriptorCollection {
+		return reduce(currentBoundingRects,
+			(result, containerCalcRect, index) => {
+				try {
+					const key = containerCalcRect.key
+					result[key] = containerCalcRect
+	
+					result[key].relative = {
+						left: (userProps[key] && userProps[key].relative) ? userProps[key].relative.left : 0,
+						top: (userProps[key] && userProps[key].relative) ? userProps[key].relative.top : 0,
+					}
+
+					if(
+						(userProps[key] && userProps[key].boundToContainer) ||
+						(containerCalcRect.canBeBound && containerCalcRect.boundToContainer)
+					) {
+						const relatedContainerKey = userProps[key]?.boundToContainer || containerCalcRect.boundToContainer
+						const relatedContainer = find(currentBoundingRects, {key: relatedContainerKey})
+						console.log('init bound coords', containerCalcRect.key, '→', relatedContainer, userProps[key]?.relative)
+						if(relatedContainer && !userProps[key]?.relative) {
+							result[key].relative.left = relatedContainer.left
+							result[key].relative.top = relatedContainer.top
+						}
+					}
+
+					return result
+
+				} catch(err) {
+					console.warn(err)
+					return result
+				}
+			}
+		, {})
+	}
+
+	getAbsoluteContainerOffset(container: Partial<TContainerDescriptor>) : [number, number] {
+		if(container.isAbsolute == true) {
+			return [
+				(container.relative && container.relative.left) || container.left || 0,
+				(container.relative && container.relative.top) || container.top || 0
+			]
 		} else {
-			return { 
-				left: this.moduleToPx(containerCoordinates.moduleX || 0),
-				top: this.moduleToPx(containerCoordinates.moduleY || 0)
-			}
+			return [
+				container.left  || 0,
+				container.top  || 0
+			]
 		}
 	}
 
-	prepareElementRender(element: React.ReactElement, containerCoordsCollection: TContainerCoordCollection) : React.ReactElement<any> {
-		const coordinateProps = this.getContainerCoordinateProps(element.props.canvasKey, containerCoordsCollection)
-		if(containerCoordsCollection[element.props.canvasKey]) console.log(element.props.canvasKey, containerCoordsCollection[element.props.canvasKey].moduleX, containerCoordsCollection[element.props.canvasKey].moduleY)
-		const updatedProps = {
+	safeContainerOffset(container) : [number, number] {
+		if(!container) return [0,0]
+
+		return [
+			(container.relative && container.relative.left) || container.left || 0,
+			(container.relative && container.relative.top) || container.top || 0
+		]
+	}
+
+	prepareElementRender(
+		element: React.ReactElement, containerDescriptorCollection: TContainerDescriptorCollection
+	) : React.ReactElement<any> {
+		const existingPassedProps : TContainerDescriptor = containerDescriptorCollection[element.props.canvasKey]
+
+		const [left, top] = this.safeContainerOffset(existingPassedProps)
+
+		const updatedProps : ICanvasContainerProps = {
 			...element.props,
-			...coordinateProps
+			left,
+			top,
+			key: element.props.canvasKey
 		}
 
-		console.log(updatedProps)
+		if(existingPassedProps && existingPassedProps.isExtra) 
+			updatedProps.isExtra = existingPassedProps.isExtra
 
+		console.log('override bound', element.props.canvasKey, existingPassedProps, updatedProps.canBound, existingPassedProps?.canBeBound)
+		if(existingPassedProps && existingPassedProps.boundToContainer) {
+			updatedProps.boundTo = existingPassedProps.boundToContainer || true
+		}
 
-		return React.cloneElement(element, { ...updatedProps, key: element.props.canvasKey}, element.props.children)
+		return React.cloneElement(element, updatedProps, element.props.children)
 	}
 
 	createDragPlaceholder(element: React.ReactElement, ref: React.MutableRefObject<Partial<HTMLDivElement>>) {
@@ -116,155 +194,62 @@ class LayoutEngine {
 	}
 
 	updateDragPlaceholder(
+		dX: number, dY: number,
 		key: string, 
-		ref: React.MutableRefObject<Partial<HTMLDivElement>>, 
-		module_dX: number, module_dY: number,
-		containerCoordinatesCollection: TContainerCoordCollection
+		containerCoordinatesCollection: TContainerDescriptorCollection,
+		ref: React.MutableRefObject<Partial<HTMLDivElement>>
 	) {
 		if(!containerCoordinatesCollection || !ref || !key) return
 
-		
 		const containerCoordinates = containerCoordinatesCollection[key]
-		console.log('Parent container', this.moduleToPx(containerCoordinates.moduleX + module_dX), this.moduleToPx(containerCoordinates.moduleY + module_dY), containerCoordinates.parentOffset.x, containerCoordinates.parentOffset.y)
-		// console.log('Drag container', containerCoordinates.moduleX, containerCoordinates.moduleY, containerCoordinates.parentOffset.x, containerCoordinates.parentOffset.y)
 
+		
+		const [left, top] = this.getAbsoluteContainerOffset(containerCoordinates)
 
-		ref.current && ref.current.setAttribute && ref.current.setAttribute('style', `
-			left: ${(this.moduleToPx(module_dX) + containerCoordinates.parentOffset.x)}px;
-			top: ${this.moduleToPx(module_dY) + containerCoordinates.parentOffset.y}px;
-			width: ${containerCoordinates.width}px;
-			height: ${containerCoordinates.height}px;
-			z-index: 999999;
-			display: block;
-		`)
+		ref.current && ref.current.setAttribute && ref.current.setAttribute('style', 
+			this.prepareDragPlaceholderCSS({
+				left: left + dX,
+				top: top + dY,
+				width: containerCoordinates.width,
+				height: containerCoordinates.height,
+			})
+		)
+	}
 
-		console.log(`
-			left: ${(this.moduleToPx(module_dX) + containerCoordinates.parentOffset.x)}px;
-			top: ${this.moduleToPx(module_dY) + containerCoordinates.parentOffset.y}px;
-			width: ${containerCoordinates.width}px;
-			height: ${containerCoordinates.height}px;
-			z-index: 999999;
-			display: block;
-		`)
-
-		console.log(ref.current.getAttribute('style'))
+	private prepareDragPlaceholderCSS(styleProps: TRect) {
+		try {
+			return [
+				`left: ${styleProps.left || 0}px`,
+				`top: ${styleProps.top || 0}px`,
+				`width: ${styleProps.width || 24}px`,
+				`height: ${styleProps.height || 24}px`,
+				'z-index: 999999',
+				'position: absolute',
+				'display: block'
+			].join('; ')
+		} catch (err) {
+			return ''
+		}
 	}
 
 	hideDragContainer(ref: React.MutableRefObject<Partial<HTMLDivElement>>) {
 		ref.current && ref.current.setAttribute && ref.current.setAttribute('style', '')
 	}
 
-	calcContainerBoundingRects(elements: (HTMLElement & TCanvasContainerElement)[], parentX: number = 0, parentY: number = 0) : TContainerCoordCollection {
-		let result : TContainerCoordCollection = {}
-		each(elements, (element, index) => {
-
-			const elementBoundingRect = element.getBoundingClientRect()
-			const elementStyleMap = window.getComputedStyle(element) 
-			const elementKey = element.getAttribute('data-key')
-
-				
-			if(!elementKey) return
-			
-			const elementNormalizedHeight = this.normalizeDimensionValue(elementBoundingRect.height)
-			const elementNormalizedWidth = this.normalizeDimensionValue(elementBoundingRect.width)
-
-			const isAbsolute = !!element.getAttribute('data-canvas-absolute')
-			const boundTo = element.getAttribute('data-canvas-bound') || undefined
-
-			let parentOffset = { x: 0, y: 0 }
-			if(!isAbsolute) {
-				parentOffset = {
-					x: elementBoundingRect.x - parentX,
-					y: elementBoundingRect.y - parentY
-				}
-			} 
-			// else if (boundTo && result[boundTo]) {
-			// 	parentOffset = {
-			// 		x: result[boundTo].parentOffset.x + this.moduleToPx( result[boundTo].moduleX || 0),
-			// 		y: result[boundTo].parentOffset.y + this.moduleToPx( result[boundTo].moduleY || 0)
-			// 	}
-			// }
-
-			result[elementKey] = {
-				key: elementKey,
-				index,
-				isAbsolute,
-				boundTo,
-
-				height: this.layoutOptions.normalizeHeight ? elementNormalizedHeight : elementBoundingRect.height,
-				width: this.layoutOptions.normalizeWidth ? elementNormalizedWidth : elementBoundingRect.width,
-				moduleY: Math.round(this.getPositionCSSProperty('top', elementStyleMap) / this.layoutOptions.moduleSize),
-				moduleX: Math.round(this.getPositionCSSProperty('left', elementStyleMap) / this.layoutOptions.moduleSize),
-				moduleH: elementNormalizedHeight / this.layoutOptions.moduleSize,
-				moduleW: elementNormalizedWidth / this.layoutOptions.moduleSize,
-				
-				parentOffset
-			}
-		})
-
-		each(elements, (element, index) => {
-
-			const elementBoundingRect = element.getBoundingClientRect()
-			const elementStyleMap = window.getComputedStyle(element) 
-			const elementKey = element.getAttribute('data-key')
-
-				
-			if(!elementKey) return
-			
-			const elementNormalizedHeight = this.normalizeDimensionValue(elementBoundingRect.height)
-			const elementNormalizedWidth = this.normalizeDimensionValue(elementBoundingRect.width)
-
-			const isAbsolute = !!element.getAttribute('data-canvas-absolute')
-			const boundTo = element.getAttribute('data-canvas-bound') || undefined
-
-			if(elementKey == 'entry-form-2-comment') console.log('~~', result[boundTo])
-
-			let parentOffset = { x: 0, y: 0 }
-			// if(!isAbsolute) {
-			// 	parentOffset = {
-			// 		x: elementBoundingRect.x - parentX,
-			// 		y: elementBoundingRect.y - parentY
-			// 	}
-			// } 
-			if (boundTo && result[boundTo]) {
-				parentOffset = {
-					x: result[boundTo].parentOffset.x,
-					y: result[boundTo].parentOffset.y
-				}
-				result[elementKey] = {
-					key: elementKey,
-					index,
-					isAbsolute,
-					boundTo,
-	
-					height: this.layoutOptions.normalizeHeight ? elementNormalizedHeight : elementBoundingRect.height,
-					width: this.layoutOptions.normalizeWidth ? elementNormalizedWidth : elementBoundingRect.width,
-					moduleY: (this.getPositionCSSProperty('top', elementStyleMap) - result[boundTo].parentOffset.y) / this.layoutOptions.moduleSize,
-					moduleX: (this.getPositionCSSProperty('left', elementStyleMap) - result[boundTo].parentOffset.x) / this.layoutOptions.moduleSize,
-					moduleH: elementNormalizedHeight / this.layoutOptions.moduleSize,
-					moduleW: elementNormalizedWidth / this.layoutOptions.moduleSize,
-					
-					parentOffset
-				}
-			}
-		})
-		return result
-	}
-
-	createConnectors(connectors: TConnectorDescriptionList, canvasElem: React.MutableRefObject<HTMLDivElement>) {
-		let definedConnectors : TDefinedConnectorList = []
+	createConnectors(connectors: TConnectorPathList, canvasElem: Element) {
+		let definedConnectors : TConnectorDescriptorList = []
 		
 		each(connectors, (connector) => {
 			try {
-				const startElem = canvasElem.current.querySelector(`[data-key="${connector.from}"]`)
-				const endElem = canvasElem.current.querySelector(`[data-key="${connector.to}"]`)
+				const startElem = canvasElem.querySelector(`[data-key="${connector.from}"]`)
+				const endElem = canvasElem.querySelector(`[data-key="${connector.to}"]`)
 
 
 				if(!startElem || !endElem) return
 
 				const startElemDomRect = startElem.getBoundingClientRect()
 				const endElemDomRect = endElem.getBoundingClientRect()
-				const canvasElemDomRect = canvasElem.current.getBoundingClientRect()
+				const canvasElemDomRect = canvasElem.getBoundingClientRect()
 
 				const canvasOffset = {
 					x: canvasElemDomRect.left,
@@ -292,15 +277,10 @@ class LayoutEngine {
 					)
 				)
 
-				// console.log(startContainer, startConnectorPoints)
-				// console.log(endContainer, endConnectorPoints)
-
 				const { from, to } = findClosestPoints(
 					startConnectorPoints,
 					endConnectorPoints
 				)
-
-				// console.log(from, to)
 				
 				if(from == null || to == null) return
 
@@ -339,8 +319,6 @@ class LayoutEngine {
 
 		return currentLength
 	}
-
-	private calcLayoutCSS = bind(funcCSSLayout, this)
 
 	getPositionCSSProperty(property: string, elementStyleMap: CSSStyleDeclaration): number | undefined {
 		const currentProp = elementStyleMap.getPropertyValue(property)

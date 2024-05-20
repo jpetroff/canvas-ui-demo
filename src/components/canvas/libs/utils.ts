@@ -1,6 +1,5 @@
-import type { TConnectorPoint } from "../types"
-import { ConnectorAttachmentType } from "../types"
 import { each, filter, indexOf, uniqBy } from "lodash"
+import { ConnectorAttachmentType } from "../connector"
 
 
 export type TRoundedCoords = { top: number, bottom: number, left: number, right: number}
@@ -9,6 +8,10 @@ export type TRoundedCoords = { top: number, bottom: number, left: number, right:
 	Coordinate manupulation and graphic utils
 */
 export const _r = Math.round
+
+export const _f = Math.floor
+
+export const _c = Math.ceil
 
 export const getAttachmentType =  (
 	x: number,
