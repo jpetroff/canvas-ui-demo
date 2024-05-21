@@ -1,5 +1,5 @@
 import { each, filter, indexOf, uniqBy } from "lodash"
-import { ConnectorAttachmentType } from "../connector"
+import { ConnectorAttachmentType } from "../Connector"
 
 
 export type TRoundedCoords = { top: number, bottom: number, left: number, right: number}
@@ -168,4 +168,18 @@ export const bezierControlPoint = (p: TConnectorPoint, w: number, h: number, off
 	}
 
 	return [newX, newY]
+}
+
+export function stepCoordinates(dX: number, dY: number, module: number) : [number, number] {
+	const module_dX = dX >= 0 ? 
+										Math.floor(dX / module) :
+										Math.ceil(dX / module)
+	const module_dY = dY >= 0 ? 
+										Math.floor(dY / module) :
+										Math.ceil(dY / module)
+
+	const result_dX = module_dX * module
+	const result_dY = module_dY * module
+
+	return [result_dX, result_dY]
 }

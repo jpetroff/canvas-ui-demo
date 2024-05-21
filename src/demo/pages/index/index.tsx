@@ -10,6 +10,7 @@ import TestForm from '@apps/test-form'
 
 import { Card, Text, Box, Button } from '@radix-ui/themes'
 import CommentBubble from '@components/comment-bubble'
+import { filter } from 'lodash'
 
 interface IAppProps {
 	router?: RouteObject
@@ -77,7 +78,14 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			connectors={connectors}
 			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout) } }
 			className="bg-slate2"
-		/>
+		>
+			<Canvas.Layout className='grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start'>
+				{filter(containers, (container) => container.props.isExtra != true)}
+			</Canvas.Layout>
+			<Canvas.Extras>
+				{filter(containers, (container) => container.props.isExtra == true)}
+			</Canvas.Extras>
+		</Canvas>
 	</div>
 };
 

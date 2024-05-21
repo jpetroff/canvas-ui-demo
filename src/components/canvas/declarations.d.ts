@@ -68,3 +68,4 @@ declare type TConnectorDescriptor =
 	}
 
 declare type TConnectorDescriptorList = TConnectorDescriptor[]
+

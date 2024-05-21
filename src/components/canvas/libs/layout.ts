@@ -1,10 +1,8 @@
 import * as React from 'react'
-import { bind, defaults, each, extend, clone, isObject, min, map, reduce, find } from "lodash"
-// import funcCSSLayout from './layout-css-defined'
-import type {ICanvasContainerProps, TCanvasContainerElement} from '../container'
-import { ConnectorAttachmentType } from '../connector'
+import { each, extend, clone, isObject, min, reduce, find } from "lodash"
+import type {ICanvasContainerProps, TCanvasContainerElement} from '../Container'
+import { ConnectorAttachmentType } from '../Connector'
 import { _f, calcConnectorPoints, filterOverlappingPoints, filterPoints, findClosestPoints, getRoundedCoords } from './utils'
-import { isAbsolute } from 'path'
 
 
 export const enum LAYOUT_RULE {
@@ -13,33 +11,24 @@ export const enum LAYOUT_RULE {
 
 declare interface ILayoutOptions {
 	moduleSize?: number
-	layout?: LAYOUT_RULE
-	moduleGap?: number
-	normalizeWidth?: boolean
-	normalizeHeight?: boolean
-	minW?: number
-	minH?: number
-	maxW?: number
-	maxH?: number
-	columns?: number
+}
+
+type TLayoutOptionsInternal = {
+	moduleSize: number
 }
 
 class LayoutEngine {
-	private layoutOptions: ILayoutOptions
+	private options: TLayoutOptionsInternal
 	private previousCoordsCollection: TContainerDescriptorCollection
 
-	constructor(opts?: ILayoutOptions) {
+	constructor(opts: ILayoutOptions) {
 		this.setOptions(opts)
 	}
 
 	setOptions(opts: ILayoutOptions) {
-		this.layoutOptions = defaults<any, ILayoutOptions>(opts || {}, {
-			moduleSize: 16,
-			moduleGap: 2,
-			normalizeWidth: false,
-			normalizeHeight: false,
-			layout: LAYOUT_RULE.css
-		})
+		this.options = {
+			moduleSize: opts.moduleSize || 4
+		}
 	}
 
 	needLayoutUpdate(collectionA: TContainerDescriptorCollection, collectionB: TContainerDescriptorCollection) : boolean {
@@ -185,10 +174,10 @@ class LayoutEngine {
 		return React.cloneElement(element, updatedProps, element.props.children)
 	}
 
-	createDragPlaceholder(element: React.ReactElement, ref: React.MutableRefObject<Partial<HTMLDivElement>>) {
+	createDragPlaceholder(element: React.ReactElement, id: string) {
 		if(!element) return
 
-		const props = extend(clone(element.props), {ref: ref, key: '__canvas-placeholder-drag__'})
+		const props = extend(clone(element.props), {id, key: '__canvas-placeholder-drag__'})
 
 		return React.cloneElement(element, props)
 	}
@@ -197,16 +186,15 @@ class LayoutEngine {
 		dX: number, dY: number,
 		key: string, 
 		containerCoordinatesCollection: TContainerDescriptorCollection,
-		ref: React.MutableRefObject<Partial<HTMLDivElement>>
+		element: Element
 	) {
-		if(!containerCoordinatesCollection || !ref || !key) return
+		if(!containerCoordinatesCollection || !element || !key) return
 
 		const containerCoordinates = containerCoordinatesCollection[key]
 
-		
 		const [left, top] = this.getAbsoluteContainerOffset(containerCoordinates)
 
-		ref.current && ref.current.setAttribute && ref.current.setAttribute('style', 
+		element.setAttribute && element.setAttribute('style', 
 			this.prepareDragPlaceholderCSS({
 				left: left + dX,
 				top: top + dY,
@@ -232,8 +220,8 @@ class LayoutEngine {
 		}
 	}
 
-	hideDragContainer(ref: React.MutableRefObject<Partial<HTMLDivElement>>) {
-		ref.current && ref.current.setAttribute && ref.current.setAttribute('style', '')
+	hideDragContainer(element: Element) {
+		element && element.setAttribute && element.setAttribute('style', '')
 	}
 
 	createConnectors(connectors: TConnectorPathList, canvasElem: Element) {
@@ -314,8 +302,8 @@ class LayoutEngine {
 	}
 
 	normalizeDimensionValue(currentLength: number) : number {
-		const mod = currentLength % this.layoutOptions.moduleSize
-		if(mod > 0) return (Math.floor(currentLength / this.layoutOptions.moduleSize) + 1) * this.layoutOptions.moduleSize
+		const mod = currentLength % this.options.moduleSize
+		if(mod > 0) return (Math.floor(currentLength / this.options.moduleSize) + 1) * this.options.moduleSize
 
 		return currentLength
 	}
@@ -331,15 +319,15 @@ class LayoutEngine {
 	}
 
 	moduleToPx(module: number): number {
-		return this.layoutOptions.moduleSize * module
+		return this.options.moduleSize * module
 	}
 
 	pxToModule(px: number): number {
-		return (Math.round(px / this.layoutOptions.moduleSize)) * this.layoutOptions.moduleSize
+		return (Math.round(px / this.options.moduleSize)) * this.options.moduleSize
 	}
 
 	moduleToCSSStyle(module: number) : string {
-		return (this.layoutOptions.moduleSize * module).toString() + 'px'
+		return (this.options.moduleSize * module).toString() + 'px'
 	}
 
 }
