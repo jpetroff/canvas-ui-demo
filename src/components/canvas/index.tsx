@@ -44,7 +44,7 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 		moduleSize: 4,
 		gap: 2,
 		placeholderDrag: <Placeholder />,
-		layoutWrapperClass: `grid w-2/3 m-auto grid-cols-2 gap-4 p-4 items-start`,
+		layoutWrapperClass: `grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start`,
 		..._props
 	}
 
