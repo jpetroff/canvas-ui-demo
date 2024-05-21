@@ -30,7 +30,6 @@
         "react-dom": "*",
         "react-router-dom": "*",
         "react-transition-group": "*",
-        "rooks": "^7.14.1",
         "styled-components": "*"
     },
     "devDependencies": {

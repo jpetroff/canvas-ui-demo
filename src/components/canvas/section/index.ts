@@ -10,7 +10,13 @@ const Section: React.FunctionComponent<ISectionProps> = (props) => {
 
 	return React.cloneElement(
 		children,
-		{ ['data-key']: canvasKey, key: canvasKey, ...elementProps, ...children.props}
+		{ 
+			['data-key']: canvasKey, 
+			['data-canvas-container-section']: true,
+			key: canvasKey, 
+			...elementProps, 
+			...children.props
+		}
 	)
 }
 

@@ -26,7 +26,7 @@ const Connector = React.memo<IConnectorProps>(
 	(props) => {
 		const ref = React.useRef(null)
 
-		const padding = 16
+		const padding = 32
 
 		const top = props.top - padding
 		const left = props.left - padding

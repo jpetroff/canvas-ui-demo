@@ -3,9 +3,8 @@
  */
 
 import * as React from 'react'
-import { useDidMount, useForkRef } from 'rooks'
+import { useDidMount } from '../libs/custom-hooks'
 import { merge, isFunction } from 'lodash'
-import { combinedRef } from '../libs/combined-ref'
 import { mergeReactProps } from '../libs/merge-react-props'
 import { useCanvasContext, useCanvasDispatch } from '../libs/context'
 
@@ -19,7 +18,8 @@ export interface ICanvasContainerProps extends React.HTMLProps<HTMLElement> {
 	h?: number
 	onMount?: () => void
 	children?: React.ReactNode
-	isExtra?: boolean,
+	isExtra?: boolean
+	isAbsolute?: boolean
 	boundTo?: string
 	canBound?: boolean
 }
@@ -31,12 +31,12 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 		isExtra, 
 		boundTo,
 		canBound,
+		isAbsolute,
 		...containerProps
 	} = props
 
 	try {
 		const globalContext = useCanvasContext()
-		const updateContext = useCanvasDispatch()
 	
 		if (!React.isValidElement(children)) {
 			return null;
@@ -61,7 +61,7 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 			key: canvasKey,
 			['data-key']: canvasKey,
 			['data-canvas-container']: true,
-			['data-canvas-absolute']: isExtra || currentContext?.isExtra,
+			['data-canvas-absolute']: isExtra || isAbsolute || currentContext?.isExtra,
 			['data-canvas-bound']: currentContext?.boundToContainer || boundTo || undefined,
 			['data-canvas-allow-bound']: !!canBound || currentContext?.canBeBound || undefined,
 		}, compositionProps)
