@@ -24,6 +24,7 @@ interface ICanvasProps extends React.HTMLProps<HTMLElement> {
 	onLayoutChange: (newLayout: IContainerDescriptorPropCollection) => void
 	moduleSize?: number
 	gap?: number
+	scale?: number
 
 	layoutWrapperClass?: string
 	placeholderDrag?: React.ReactElement
@@ -53,12 +54,25 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	}
 	const canvasRef = React.useRef<HTMLDivElement>(null)
 
+	console.log(`→→→→→ props passed`, props.containerCoordinates)
+
+	const areaScale = (props.scale >= 0.5 && props.scale <= 1) ? props.scale : 1
+
 	return (
 	<CanvasContextProvider value={
 		{
 			descriptors: props.containerCoordinates,
 			connectors: props.connectors,
-			area: {}
+			area: {
+				dragObjectKey: null,
+				scale: areaScale,
+				padding: {
+					top: 0,
+					bottom: 0,
+					left: 0,
+					right: 0
+				}
+			}
 		}
 	} >
 		<div className={`${props.className || ''} w-full h-full overflow-hidden transform-gpu`}>

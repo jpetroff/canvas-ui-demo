@@ -1,12 +1,14 @@
 import * as React from 'react'
-import { each, extend, clone, isObject, min, reduce, find } from "lodash"
+import { each, extend, clone, isObject, min, reduce, find, merge } from "lodash"
 import type {ICanvasContainerProps, TCanvasContainerElement} from '../Container'
 import { ConnectorAttachmentType } from '../Connector'
-import { _f, calcConnectorPoints, filterOverlappingPoints, filterPoints, findClosestPoints, getRoundedCoords } from './utils'
+import { _f, _r, calcConnectorPoints, filterOverlappingPoints, filterPoints, findClosestPoints, getMutableBoundingRect, getRoundedCoords } from './utils'
 
-
-export const enum LAYOUT_RULE {
-	css = 'css'
+export enum ChildConnectorOrientation {
+	horizontal = 'horizontal',
+	vertical = 'vertical',
+	self = 'self',
+	parent = 'parent'
 }
 
 declare interface ILayoutOptions {
@@ -19,7 +21,6 @@ type TLayoutOptionsInternal = {
 
 class LayoutEngine {
 	private options: TLayoutOptionsInternal
-	private previousCoordsCollection: TContainerDescriptorCollection
 
 	constructor(opts: ILayoutOptions) {
 		this.setOptions(opts)
@@ -92,11 +93,15 @@ class LayoutEngine {
 		currentBoundingRects : TContainerRect[], 
 		userProps: IContainerDescriptorPropCollection,
 	) : TContainerDescriptorCollection {
+
 		return reduce(currentBoundingRects,
 			(result, containerCalcRect, index) => {
 				try {
 					const key = containerCalcRect.key
-					result[key] = containerCalcRect
+					result[key] = merge(
+						(userProps[key] || {}),
+						containerCalcRect
+					)
 	
 					result[key].relative = {
 						left: (userProps[key] && userProps[key].relative) ? userProps[key].relative.left : 0,
@@ -113,6 +118,47 @@ class LayoutEngine {
 						if(relatedContainer && !userProps[key]?.relative) {
 							result[key].relative.left = relatedContainer.left
 							result[key].relative.top = relatedContainer.top
+						} else if(
+							relatedContainer && userProps[key]?._lastKnownAttachedToCoords &&
+							relatedContainer.key == userProps[key]._lastKnownAttachedToCoords.key && 
+							(
+								userProps[key]._lastKnownAttachedToCoords.top != relatedContainer.top ||
+								userProps[key]._lastKnownAttachedToCoords.left != relatedContainer.left ||
+								userProps[key]._lastKnownAttachedToCoords.width != relatedContainer.width ||
+								userProps[key]._lastKnownAttachedToCoords.height != relatedContainer.height 
+							)
+						) {
+							console.log('~~~~~~LKAC', userProps[key]?._lastKnownAttachedToCoords, relatedContainer)
+							console.log(key, result[key].top, result[key].left)
+							//on resize trying to recalculate from last known parent coordinates
+							// each(['top', 'left'], (side) => {
+							// 	const dimension = side == 'top' ? 'height' : 'width'
+							// 	const relativePart = relatedContainer[side] - userProps[key]._lastKnownAttachedToCoords[side]
+							// 	const deltaDimension = Math.abs(userProps[key]._lastKnownAttachedToCoords[dimension] - relatedContainer[dimension])
+							// 	result[key][side] = result[key].relative[side] = _r(
+							// 		relatedContainer[side] + relativePart * (relatedContainer[dimension] / deltaDimension)
+							// 	)
+							// }) 
+							// result[key].relative.left -= _r(
+							// 	(userProps[key]._lastKnownAttachedToCoords.left - relatedContainer.left)
+							// )
+							// result[key].relative.top -= _r(
+							// 	(userProps[key]._lastKnownAttachedToCoords.top - relatedContainer.top)
+							// )
+							// result[key].left -= _r(
+							// 	(userProps[key]._lastKnownAttachedToCoords.left - relatedContainer.left)
+							// )
+							// result[key].top -= _r(
+							// 	(userProps[key]._lastKnownAttachedToCoords.top - relatedContainer.top)
+							// )
+							console.log(key, result[key].top, result[key].left)
+						}
+						result[key]._lastKnownAttachedToCoords = {
+							left: relatedContainer.left,
+							top: relatedContainer.top,
+							width: relatedContainer.width,
+							height: relatedContainer.height,
+							key: relatedContainer.key
 						}
 					}
 
@@ -127,16 +173,20 @@ class LayoutEngine {
 	}
 
 	getAbsoluteContainerOffset(container: Partial<TContainerDescriptor>) : [number, number] {
-		if(container.isAbsolute == true) {
-			return [
-				(container.relative && container.relative.left) || container.left || 0,
-				(container.relative && container.relative.top) || container.top || 0
-			]
-		} else {
-			return [
-				container.left  || 0,
-				container.top  || 0
-			]
+		try {
+			if(container.isAbsolute == true) {
+				return [
+					_r((container.relative && container.relative.left) || container.left || 0),
+					_r((container.relative && container.relative.top) || container.top || 0)
+				]
+			} else {
+				return [
+					_r( container.left ),
+					_r( container.top )
+				]
+			}
+		} catch (err) {
+			return [0,0]
 		}
 	}
 
@@ -144,34 +194,9 @@ class LayoutEngine {
 		if(!container) return [0,0]
 
 		return [
-			(container.relative && container.relative.left) || container.left || 0,
-			(container.relative && container.relative.top) || container.top || 0
+			_r((container.relative && container.relative.left) || container.left || 0),
+			_r((container.relative && container.relative.top) || container.top || 0)
 		]
-	}
-
-	prepareElementRender(
-		element: React.ReactElement, containerDescriptorCollection: TContainerDescriptorCollection
-	) : React.ReactElement<any> {
-		const existingPassedProps : TContainerDescriptor = containerDescriptorCollection[element.props.canvasKey]
-
-		const [left, top] = this.safeContainerOffset(existingPassedProps)
-
-		const updatedProps : ICanvasContainerProps = {
-			...element.props,
-			left,
-			top,
-			key: element.props.canvasKey
-		}
-
-		if(existingPassedProps && existingPassedProps.isExtra) 
-			updatedProps.isExtra = existingPassedProps.isExtra
-
-		console.log('override bound', element.props.canvasKey, existingPassedProps, updatedProps.canBound, existingPassedProps?.canBeBound)
-		if(existingPassedProps && existingPassedProps.boundToContainer) {
-			updatedProps.boundTo = existingPassedProps.boundToContainer || true
-		}
-
-		return React.cloneElement(element, updatedProps, element.props.children)
 	}
 
 	createDragPlaceholder(element: React.ReactElement, id: string) {
@@ -224,35 +249,78 @@ class LayoutEngine {
 		element && element.setAttribute && element.setAttribute('style', '')
 	}
 
+	private getRealConnectorPoints(
+		element: Element, 
+		offset: { x: number, y: number } = { x: 0, y: 0},
+		parent: Element = null, orientation: ChildConnectorOrientation = ChildConnectorOrientation.self
+	) : [TRoundedCoords, ConnectorAttachmentType[] ] {
+		const elementRects = element.getBoundingClientRect()
+		const CCO = ChildConnectorOrientation
+		const CAT = ConnectorAttachmentType
+
+		console.log('elem',element)
+
+		let result = getMutableBoundingRect(elementRects)
+		console.log(result)
+		if(parent) {
+			const parentRects = parent.getBoundingClientRect()
+			result.top = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top : elementRects.top
+			result.y = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top : elementRects.top
+			result.bottom = (orientation == CCO.vertical || orientation ==  CCO.parent) ? parentRects.bottom : elementRects.bottom
+			result.left = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left : elementRects.left
+			result.x = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left : elementRects.left
+			result.right = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.right : elementRects.right
+			result.width = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.width : elementRects.width
+			result.height = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.width : elementRects.height
+		}
+
+		let availableConnectorPoints = []
+		if(orientation && orientation == CCO.horizontal) {
+			availableConnectorPoints = [CAT.left, CAT.right]
+		} else if(orientation && orientation == CCO.vertical) {
+			availableConnectorPoints = [CAT.top, CAT.bottom]
+		} else {
+			availableConnectorPoints = [CAT.top, CAT.bottom, CAT.left, CAT.right]
+		}
+		console.log(result)
+		return [
+			getRoundedCoords(result, offset),
+			availableConnectorPoints
+		]
+	}
+
 	createConnectors(connectors: TConnectorPathList, canvasElem: Element) {
 		let definedConnectors : TConnectorDescriptorList = []
+		const AT = ConnectorAttachmentType
 		
 		each(connectors, (connector) => {
 			try {
 				const startElem = canvasElem.querySelector(`[data-key="${connector.from}"]`)
 				const endElem = canvasElem.querySelector(`[data-key="${connector.to}"]`)
-
-
-				if(!startElem || !endElem) return
-
-				const startElemDomRect = startElem.getBoundingClientRect()
-				const endElemDomRect = endElem.getBoundingClientRect()
 				const canvasElemDomRect = canvasElem.getBoundingClientRect()
-
 				const canvasOffset = {
 					x: canvasElemDomRect.left,
 					y: canvasElemDomRect.top
 				}
 
-				const startContainer = getRoundedCoords(startElemDomRect, canvasOffset)
-				const endContainer = getRoundedCoords(endElemDomRect, canvasOffset)
+				if(!startElem || !endElem) return
+
+				const startElemHasParent = startElem.closest(`[data-canvas-container]`) != startElem && startElem.closest(`[data-canvas-container]`)
+
+				const endElemHasParent = endElem.closest(`[data-canvas-container]`) != endElem && endElem.closest(`[data-canvas-container]`)
+
+				const [startContainer, startAttachment] = this.getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
+				const [endContainer, endAttachment] = this.getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
+
+				console.log('Coords', startContainer, endContainer)
+				console.log('attachment', startElemHasParent, startAttachment, endElemHasParent, endAttachment)
 
 				const startConnectorPoints = 
 				filterOverlappingPoints(
 					endContainer,
 					filterPoints(
 						calcConnectorPoints(startContainer),
-						[ConnectorAttachmentType.bottom, ConnectorAttachmentType.top, ConnectorAttachmentType.left, ConnectorAttachmentType.right]
+						startAttachment
 					)
 				)
 
@@ -261,9 +329,11 @@ class LayoutEngine {
 					startContainer,
 					filterPoints(
 						calcConnectorPoints(endContainer),
-						[ConnectorAttachmentType.bottom, ConnectorAttachmentType.top, ConnectorAttachmentType.left, ConnectorAttachmentType.right]
+						endAttachment
 					)
 				)
+
+				
 
 				const { from, to } = findClosestPoints(
 					startConnectorPoints,

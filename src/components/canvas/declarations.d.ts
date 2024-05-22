@@ -1,4 +1,17 @@
 // import type { TCanvasContainerElement } from "./container"
+declare type TRoundedCoords = { top: number, bottom: number, left: number, right: number}
+
+declare type DOMRectMutable = {
+	top: number
+	right: number
+	bottom: number
+	left: number
+	width: number
+	height: number
+	x: number
+	y: number
+}
+
 declare type TRect = {
 	// absolute coordinates from getBoundingClientRect()
 	left: number
@@ -16,6 +29,7 @@ declare type TContainerRect =
 		isAbsolute?: boolean
 		canBeBound?: boolean
 		boundToContainer?: string
+		
 	}
 
 declare type TContainerDescriptorPropItem = {
@@ -27,7 +41,7 @@ declare type TContainerDescriptorPropItem = {
 		left: number,
 		top: number
 	}
-	
+	_lastKnownAttachedToCoords?: {key: string} & TRect
 }
 
 declare interface IContainerDescriptorPropCollection {

@@ -126,14 +126,14 @@ function handleDelete(
 
 function handleResize(
 	state: TCanvasContextState, 
-	value: Partial<TRect>
+	value: Partial<TAreaContext>
 ) {
 	try {
 		const newState = extend(
 			{}, 
 			state, 
 			{
-				area: value
+				area: extend({}, state.area, value)
 			})
 
 		return newState
@@ -184,5 +184,5 @@ export type CanvasEvent =
 	|
 	{
 		type: ContextEventType.resize,
-		value: TAreaContext
+		value: Partial<TAreaContext>
 	}

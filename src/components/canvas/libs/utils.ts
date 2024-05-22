@@ -2,8 +2,6 @@ import { each, filter, indexOf, uniqBy } from "lodash"
 import { ConnectorAttachmentType } from "../Connector"
 
 
-export type TRoundedCoords = { top: number, bottom: number, left: number, right: number}
-
 /* 
 	Coordinate manupulation and graphic utils
 */
@@ -33,14 +31,27 @@ export const getAttachmentType =  (
 }
 
 export const getRoundedCoords = (
-	rectDom: DOMRect, 
-	offset: { x: number, y: number } = { x: 0, y: 0}
+	elemRect: DOMRect | DOMRectMutable, 
+	offset: { x: number, y: number } = { x: 0, y: 0},
 ) : TRoundedCoords => {
 	return {
-		top: _r(rectDom.top - offset.y),
-		bottom: _r(rectDom.top + rectDom.height - offset.y),
-		left: _r(rectDom.left - offset.x),
-		right: _r(rectDom.left + rectDom.width - offset.x)
+		top: _r(elemRect.top - offset.y),
+		bottom: _r(elemRect.top + elemRect.height - offset.y),
+		left: _r(elemRect.left - offset.x),
+		right: _r(elemRect.left + elemRect.width - offset.x)
+	}
+}
+
+export const getMutableBoundingRect = (rect: DOMRect | DOMRectMutable) => {
+	return {
+		top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    x: rect.x,
+    y: rect.y
 	}
 }
 

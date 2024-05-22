@@ -52,7 +52,6 @@ function checkIntersection(
 		}
 	})
 
-	console.log(result)
 	return result
 }
 

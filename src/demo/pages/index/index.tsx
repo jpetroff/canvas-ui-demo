@@ -12,6 +12,8 @@ import { Card, Text, Box, Button } from '@radix-ui/themes'
 import CommentBubble from '@components/comment-bubble'
 import { filter } from 'lodash'
 
+import useLocalStorage from '../../js/utils'
+
 interface IAppProps {
 	router?: RouteObject
 }
@@ -19,6 +21,9 @@ interface IAppProps {
 const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	const navigate = useNavigate()
 	const location = useLocation()
+
+	const [storedDescriptors, storeDescriptors, removeDescriptors] = useLocalStorage<IContainerDescriptorPropCollection>('test-app-storage-descriptors')
+	const [storedConnectors, storeConnectors, removeConnectors] = useLocalStorage<TConnectorPathList>('test-app-storage-connectors')
 
 	const [containers, setContainers] = React.useState([
 		<Canvas.Container canvasKey='entry-form' key='entry-form'>
@@ -52,8 +57,8 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			<CommentBubble initials='J' />
 		</Canvas.Container>
 	])
-	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorPropCollection>({})
-	const [connectors, setConnectors] = React.useState<TConnectorPathList>([
+	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorPropCollection>(storedDescriptors || {})
+	const [connectors, setConnectors] = React.useState<TConnectorPathList>(storedConnectors || [
 		{from: 'entry-form', to: 'entry-form-2'},
 		{from: 'second-form#option1', to: 'entry-form-4'}
 	])
@@ -72,11 +77,12 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 		<Sidebar className="border-r-slate-100 bg-white border-r">
 			<Button onClick={handleContainerAdd}>Create new container</Button>
 		</Sidebar>
-		<Canvas 
+		<Canvas
+			scale={1}
 			containers={containers}
 			containerCoordinates={containerCoordinates}
 			connectors={connectors}
-			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout) } }
+			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
 			className="bg-slate2"
 		>
 			<Canvas.Layout className='grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start'>
