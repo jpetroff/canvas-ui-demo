@@ -211,7 +211,8 @@ class LayoutEngine {
 		dX: number, dY: number,
 		key: string, 
 		containerCoordinatesCollection: TContainerDescriptorCollection,
-		element: Element
+		element: Element,
+		scale: number = 1
 	) {
 		if(!containerCoordinatesCollection || !element || !key) return
 
@@ -223,8 +224,8 @@ class LayoutEngine {
 			this.prepareDragPlaceholderCSS({
 				left: left + dX,
 				top: top + dY,
-				width: containerCoordinates.width,
-				height: containerCoordinates.height,
+				width: containerCoordinates.width / scale,
+				height: containerCoordinates.height / scale,
 			})
 		)
 	}
@@ -250,9 +251,11 @@ class LayoutEngine {
 	}
 
 	private getRealConnectorPoints(
-		element: Element, 
+		element: TContainerDescriptor, 
 		offset: { x: number, y: number } = { x: 0, y: 0},
-		parent: Element = null, orientation: ChildConnectorOrientation = ChildConnectorOrientation.self
+		parent: TContainerDescriptor = null, 
+		orientation: ChildConnectorOrientation = ChildConnectorOrientation.self,
+		scale: number = 1
 	) : [TRoundedCoords, ConnectorAttachmentType[] ] {
 		const elementRects = element.getBoundingClientRect()
 		const CCO = ChildConnectorOrientation
@@ -260,18 +263,19 @@ class LayoutEngine {
 
 		console.log('elem',element)
 
+
 		let result = getMutableBoundingRect(elementRects)
 		console.log(result)
 		if(parent) {
 			const parentRects = parent.getBoundingClientRect()
-			result.top = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top : elementRects.top
-			result.y = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top : elementRects.top
-			result.bottom = (orientation == CCO.vertical || orientation ==  CCO.parent) ? parentRects.bottom : elementRects.bottom
-			result.left = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left : elementRects.left
-			result.x = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left : elementRects.left
-			result.right = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.right : elementRects.right
-			result.width = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.width : elementRects.width
-			result.height = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.width : elementRects.height
+			result.top = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top / scale : elementRects.top / scale
+			result.y = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top / scale : elementRects.top / scale
+			result.bottom = (orientation == CCO.vertical || orientation ==  CCO.parent) ? parentRects.bottom / scale : elementRects.bottom / scale
+			result.left = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left / scale : elementRects.left / scale
+			result.x = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left / scale : elementRects.left / scale
+			result.right = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.right / scale : elementRects.right / scale
+			result.width = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.width / scale : elementRects.width / scale
+			result.height = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.width / scale : elementRects.height / scale
 		}
 
 		let availableConnectorPoints = []
@@ -289,7 +293,7 @@ class LayoutEngine {
 		]
 	}
 
-	createConnectors(connectors: TConnectorPathList, canvasElem: Element) {
+	createConnectors(connectors: TConnectorPathList, canvasElem: Element, containerCoordinatesCollection: TContainerDescriptorCollection, scale: number = 1) {
 		let definedConnectors : TConnectorDescriptorList = []
 		const AT = ConnectorAttachmentType
 		
@@ -297,6 +301,8 @@ class LayoutEngine {
 			try {
 				const startElem = canvasElem.querySelector(`[data-key="${connector.from}"]`)
 				const endElem = canvasElem.querySelector(`[data-key="${connector.to}"]`)
+				// const startElem = containerCoordinatesCollection[connector.from]
+				// const endElem = containerCoordinatesCollection[connector.to]
 				const canvasElemDomRect = canvasElem.getBoundingClientRect()
 				const canvasOffset = {
 					x: canvasElemDomRect.left,
@@ -306,11 +312,13 @@ class LayoutEngine {
 				if(!startElem || !endElem) return
 
 				const startElemHasParent = startElem.closest(`[data-canvas-container]`) != startElem && startElem.closest(`[data-canvas-container]`)
+				// const startElemParent = startElemHasParent ? containerCoordinatesCollection[startElemHasParent.getAttribute('data-canvas-key')] : null
 
 				const endElemHasParent = endElem.closest(`[data-canvas-container]`) != endElem && endElem.closest(`[data-canvas-container]`)
+				// const endElemParent = endElemHasParent ? containerCoordinatesCollection[endElemHasParent.getAttribute('data-canvas-key')] : null
 
-				const [startContainer, startAttachment] = this.getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
-				const [endContainer, endAttachment] = this.getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
+				const [startContainer, startAttachment] = this.getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self, scale)
+				const [endContainer, endAttachment] = this.getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self, scale)
 
 				console.log('Coords', startContainer, endContainer)
 				console.log('attachment', startElemHasParent, startAttachment, endElemHasParent, endAttachment)

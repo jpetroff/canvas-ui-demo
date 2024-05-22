@@ -181,7 +181,7 @@ export const bezierControlPoint = (p: TConnectorPoint, w: number, h: number, off
 	return [newX, newY]
 }
 
-export function stepCoordinates(dX: number, dY: number, module: number) : [number, number] {
+export function stepCoordinates(dX: number, dY: number, module: number, scale: number = 1) : [number, number] {
 	const module_dX = dX >= 0 ? 
 										Math.floor(dX / module) :
 										Math.ceil(dX / module)
@@ -189,8 +189,8 @@ export function stepCoordinates(dX: number, dY: number, module: number) : [numbe
 										Math.floor(dY / module) :
 										Math.ceil(dY / module)
 
-	const result_dX = module_dX * module
-	const result_dY = module_dY * module
+	const result_dX = _r(module_dX * module / scale)
+	const result_dY = _r(module_dY * module / scale)
 
 	return [result_dX, result_dY]
 }

@@ -202,12 +202,13 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 			globalContext.area.dragObjectKey != null
 		) {
 				const dragContainer = document.getElementById(`${placeholderId}`)
-				const [dX, dY] = stepCoordinates(event.clientX - mouseDragCoords.X, event.clientY - mouseDragCoords.Y, props.moduleSize)
+				const [dX, dY] = stepCoordinates(event.clientX - mouseDragCoords.X, event.clientY - mouseDragCoords.Y, props.moduleSize, globalContext.area.scale)
 				LE.updateDragPlaceholder(
 					dX, dY,
 					globalContext.area.dragObjectKey, 
 					globalContext.descriptors,
-					dragContainer
+					dragContainer,
+					globalContext.area.scale
 				)
 			}
 	}
@@ -229,8 +230,8 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 						_container.boundToContainer == key
 					) {
 						console.log('Updated container', key)
-						container.relative.left = container.relative.left + dX
-						container.relative.top = container.relative.top + dY
+						container.relative.left = container.relative.left + dX / globalContext.area.scale
+						container.relative.top = container.relative.top + dY / globalContext.area.scale
 					}
 					result[container.key] = container
 					return container
@@ -272,7 +273,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 			console.log(`Skip update when area not initialized`)
 			return
 		}
-		const newConnectors = map(LE.createConnectors(globalContext.connectors, selfRef.current), (props) => {
+		const newConnectors = map(LE.createConnectors(globalContext.connectors, selfRef.current, globalContext.descriptors, globalContext.area.scale), (props) => {
 			const {from, to, ...elemProps} = props
 			return <Connector {...elemProps} key={`${from}~${to}`} />
 		})
@@ -302,7 +303,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 				paddingLeft: globalContext.area.padding.left,
 				paddingBottom: globalContext.area.padding.bottom,
 				paddingRight: globalContext.area.padding.right,
-				transform: `scale(${globalContext.area.scale || 1})`
+				transform: globalContext.area.scale < 1 ? `scale(${globalContext.area.scale || 1}) translate(-${ (1 - globalContext.area.scale) * 100 * globalContext.area.scale }%, -${ (1 - globalContext.area.scale) * 100 * globalContext.area.scale }%)` : null
 			}
 		}
 	>
