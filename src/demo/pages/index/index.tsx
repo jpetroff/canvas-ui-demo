@@ -60,7 +60,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorPropCollection>(storedDescriptors || {})
 	const [connectors, setConnectors] = React.useState<TConnectorPathList>(storedConnectors || [
 		{from: 'entry-form', to: 'entry-form-2'},
-		{from: 'second-form', to: 'entry-form-4'}
+		{from: 'second-form#option1', to: 'entry-form-4'}
 	])
 
 	function handleContainerAdd() {
@@ -78,7 +78,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			<Button onClick={handleContainerAdd}>Create new container</Button>
 		</Sidebar>
 		<Canvas
-			scale={1}
+			scale={0.5}
 			containers={containers}
 			containerCoordinates={containerCoordinates}
 			connectors={connectors}
