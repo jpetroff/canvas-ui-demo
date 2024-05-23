@@ -137,7 +137,7 @@ export const filterPoints = (
 
 export const epsEqual = (
 	p1: number, p2: number,
-	delta : number = 8
+	delta : number = 1
 ) : boolean => {
 	return Math.abs(p1 - p2) <= delta
 }
