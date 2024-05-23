@@ -1,11 +1,11 @@
-import { each, isArray, isObject, clone, extend, merge } from 'lodash'
+import { each, isArray, isObject, clone, extend, merge, cloneDeep } from 'lodash'
 import type { TAreaContext } from '../Area'
 import * as React from 'react'
 
 const CanvasContext = React.createContext<TCanvasContextState>(null)
 const CanvasContextEvent = React.createContext<React.Dispatch<CanvasEvent>>(null)
 
-type TCanvasContextState = {
+export type TCanvasContextState = {
 	descriptors: { [key: string ]: Partial<TContainerDescriptor> }
 	connectors: TConnectorPathList
 	area: TAreaContext
@@ -19,6 +19,7 @@ interface ICanvasContextProviderProps {
 const CanvasContextProvider: React.FunctionComponent<ICanvasContextProviderProps> = (props) => {
 	const [globalState, updateState] = React.useReducer(updateGlobalState, props.value)
 
+	console.log(`~~~~~~~~~~~~ global state`, cloneDeep(globalState), cloneDeep(props.value))
 
 	return (
 		<CanvasContext.Provider value={globalState}>
@@ -82,9 +83,11 @@ function handlePatch(
 ) {
 	try {
 		const newState = extend({}, state)
+		console.log(`Patch update`, newState)
 
 		if(isObject(_value) && key) {
 			newState.descriptors[key] = extend({}, newState.descriptors[key], _value)
+			console.log(`Patch update by key`, newState)
 			return newState
 		}
 
@@ -96,6 +99,7 @@ function handlePatch(
 
 				newState.descriptors[key] = extend({}, newState.descriptors[key], _value)
 			})
+			console.log(`Patch update by array`, newState)
 			return newState
 		}
 
@@ -163,30 +167,7 @@ export enum ContextEventType {
 
 export type CanvasEvent = 
 	{
-		type: ContextEventType.replace
-		value: TContainerDescriptor[] | TContainerDescriptorCollection
-		key?: string
-	}
-	|
-	{
-		type: ContextEventType.patch
-		value: Partial<TContainerDescriptor>[]
-		key?: string
-	}
-	|
-	{
-		type: ContextEventType.patch
-		key: string
-		value: Partial<TContainerDescriptor>
-	}
-	|
-	{
-		type: ContextEventType.delete
-		key: string
-	}
-	|
-	{
-		type: ContextEventType.resize,
-		value: Partial<TAreaContext>
+		type: ContextEventType
+		value: any
 		key?: string
 	}

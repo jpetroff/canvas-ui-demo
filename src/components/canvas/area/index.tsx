@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { useDidMount, useForkRef, useResizeObserver, useMutationObserver } from '../libs/custom-hooks'
+import useCustomCompareEffect, { useDidMount, useForkRef, useResizeObserver, useMutationObserver } from '../libs/custom-hooks'
 import { isFunction, transform, pick, map, find, indexOf, isEqual } from 'lodash'
 import { useCanvasContext, useCanvasDispatch, ContextEventType } from '../libs/context'
 import LayoutEngine from '../libs/layout-engine'
@@ -8,10 +8,10 @@ import Placeholder from '../Placeholder'
 import Connector from '../Connector'
 
 import type { TCanvasContainerElement } from '../Container' 
-import { stepCoordinates } from '../libs/utils'
+import { _r, stepCoordinates } from '../libs/utils'
 import checkIntersection, { IntersectionObjectType } from './intersection'
 
-export interface MouseTargetEvent<T extends HTMLElement = HTMLElement> extends React.MouseEvent<T, Omit<MouseEvent, 'target'>> { 
+export interface MouseTargetEvent<T extends HTMLElement> extends React.MouseEvent<T, Omit<MouseEvent, 'target'>> { 
 	target: EventTarget & Partial<T> 
 }
 
@@ -56,8 +56,7 @@ export interface IAreaProps extends React.HTMLProps<HTMLDivElement> {
 
 const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 
-	const [mouseDragCoords, setMouseDragCoords] = React.useState<{X: number, Y:number}>({X:0,Y:0})
-	const [areaWidth, setAreaWidth] = React.useState(null)
+	const [mouseDragCoords, setMouseDragCoords] = React.useState<{X: number, Y:number, objectTop: number, objectLeft: number}>({X:0,Y:0,objectTop:0,objectLeft:0})
 
 	const globalContext = useCanvasContext()
 	const updateContext = useCanvasDispatch()
@@ -99,83 +98,69 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 				padding: globalContext.area.padding
 			}
 		})
-		console.log('------------------- from area mount ----------------')
-    // const newContainerDescriptorCollection = recalcLayout()
-    // if(newContainerDescriptorCollection !== null) {
-    //  updateContainerCoordinates(newContainerDescriptorCollection)
-    // }
-		if(props.onMount && isFunction(props.onMount)) props.onMount()
+		console.log('------------------- from area effect ----------------')
 	})
 
-	// function recalcLayout(): TContainerDescriptorCollection | null {
-	// 	const childContainers = [ 
-	// 	...Array.from(selfRef.current.querySelectorAll(`[data-canvas-container]`)), 
-	// 	] as (HTMLElement & TCanvasContainerElement)[]
-
-	// 	const currentBoundingRects = LE.calcBoundingRects(childContainers)
-
-	// 	const newContainerDescriptorCollection = LE.calcLayout(
-	// 		currentBoundingRects,
-	// 		globalContext.descriptors
-	// 	)
-
-	// 	const layoutChanged = LE.needLayoutUpdate(
-	// 		globalContext.descriptors, newContainerDescriptorCollection
-	// 	)
-
-	// 	return layoutChanged ? newContainerDescriptorCollection : null
-	// }
-
-	// React.useLayoutEffect( () => {
-  //   console.log('------------------- from effect ----------------')
-	// 	if(!globalContext.area.height || !globalContext.area.width) {
-	// 		console.log(`Skip update when area not initialized`)
-	// 		return
-	// 	}
-  //   const newContainerDescriptorCollection = recalcLayout()
-  //   if(newContainerDescriptorCollection !== null) {
-  //    updateContainerCoordinates(newContainerDescriptorCollection)
-  //   }
-  // }, [globalContext])
-
-	// useResizeObserver(selfRef, () => {
-	// 	const areaRects = selfRef.current.getBoundingClientRect()
-	// 	updateContext({
-	// 		type: ContextEventType.resize,
-	// 		value: {
-	// 			top: areaRects.top,
-	// 			left: areaRects.left,
-	// 			width: areaRects.width,
-	// 			height: areaRects.height,
-	// 			dragObjectKey: null
-	// 		}
-	// 	})
-  //   const newContainerDescriptorCollection = recalcLayout()
-  //   if(newContainerDescriptorCollection !== null) {
-	// 		console.log('------------------- from resize ----------------')
-  //   	updateContainerCoordinates(newContainerDescriptorCollection)
-  //   }
-	// })
-
-	function updateContainerCoordinates(newContainerDescriptorCollection: TContainerDescriptorCollection) {
-		console.log('Update fired', newContainerDescriptorCollection)
-		updateContext( {
-			type: ContextEventType.replace,
-			value: newContainerDescriptorCollection
+	useResizeObserver(selfRef, () => {
+		const areaRects = selfRef.current.getBoundingClientRect()
+		updateContext({
+			type: ContextEventType.resize,
+			value: {
+				top: areaRects.top,
+				left: areaRects.left,
+				width: areaRects.width,
+				height: areaRects.height,
+				dragObjectKey: null,
+				padding: globalContext.area.padding
+			}
 		})
+		console.log('------------------- from area resize ----------------')
+	})
+
+	React.useEffect( () => {
 		if(props.onLayoutChange && isFunction(props.onLayoutChange)) {
+			console.log(`App update area effect descriptors`, globalContext.descriptors)
 			const newPropValue = transform<TContainerDescriptorCollection, IContainerDescriptorPropCollection>(
-				newContainerDescriptorCollection, 
+				globalContext.descriptors, 
 				(result, container) => {
 					result[container.key] = pick(container, ['relative', 'boundToContainer'])
 					return result
 				}, 
 				{})
+			console.log(`App update area effect`, newPropValue)
 			props.onLayoutChange(newPropValue)
-		} else {
-			console.warn('Canvas onLayoutChange is not defined as function: cannot save layout changes')
 		}
-	}
+	}, 
+		[globalContext]
+	// , 
+	// 	(prevDependencies, newDependencies) => {
+	// 		const prevLayout = prevDependencies[0]
+	// 		const newLayout = newDependencies[0]
+	// 		const newPropValue = transform<TContainerDescriptorCollection, IContainerDescriptorPropCollection>(
+	// 			newLayout, 
+	// 			(result, container) => {
+	// 				console.log(container)
+	// 				result[container.key] = pick(container, ['relative', 'boundToContainer'])
+	// 				return result
+	// 			}, 
+	// 			{})
+
+	// 		const prevPropValue = transform<TContainerDescriptorCollection, IContainerDescriptorPropCollection>(
+	// 			prevLayout, 
+	// 			(result, container) => {
+	// 				if(!container || !container.key || container.key == 'undefined') return
+	// 				result[container.key] = pick(container, ['relative', 'boundToContainer'])
+	// 				return result
+	// 			}, 
+	// 			{})
+
+	// 		console.log('↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓')
+	// 		console.log('custom compare effect', newPropValue, prevPropValue, isEqual(newPropValue, prevPropValue))
+	// 		console.log('↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑')
+
+	// 		return isEqual(newPropValue, prevPropValue)
+	// 	} 
+	)
 
 
 	function handleDragStart(event: MouseTargetEvent<HTMLElement>) {
@@ -183,12 +168,16 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 			event.target.getAttribute &&
 			event.target.getAttribute('data-canvas-container') == 'true'
 		) {
-			console.log(event.target.getAttribute('data-key'))
+			console.log(`Drag start`, event.target.getAttribute('data-key'))
+			const targetRects = event.target.getBoundingClientRect()
 			setDragObjectKey(event.target.getAttribute('data-key'))
 			setMouseDragCoords({
 				X: event.clientX,
-				Y: event.clientY
+				Y: event.clientY,
+				objectTop: targetRects.top - globalContext.area.top,
+				objectLeft: targetRects.left - globalContext.area.left,
 			})
+			console.log(`Init coords`, event.target.getAttribute('data-key'), targetRects.top - globalContext.area.top, targetRects.left - globalContext.area.left)
 		}
 	}
 
@@ -208,49 +197,32 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 			}
 	}
 
-	function handleDragEnd(event: MouseTargetEvent<HTMLElement>) {
+	function handleDragEnd(event: MouseTargetEvent<HTMLDivElement>) {
 		if(
 			globalContext.area.dragObjectKey != null
 		) {
 			const [dX, dY] = stepCoordinates(event.clientX - mouseDragCoords.X, event.clientY - mouseDragCoords.Y, props.moduleSize)
 
+			if(dX == 0 || dY == 0) return
+
 			const key = globalContext.area.dragObjectKey
 
 			console.log('------------------- from drag ----------------')
-			const newContainerCoordinates = transform(globalContext.descriptors, 
-				(result, _container) => {
-					const container = _container
-					if(
-						_container.key == key
-					) {
-						console.log('Updated container', key)
-						container.relative.left = container.relative.left + dX / globalContext.area.scale
-						container.relative.top = container.relative.top + dY / globalContext.area.scale
-					}
-					result[container.key] = container
-					return container
-			}, {})
 
-			if(newContainerCoordinates[key].sticky) {
-				const hitIntersections = checkIntersection(
-					selfRef.current,
-					event.clientX, event.clientY,
-					globalContext.descriptors
-				)
-	
-				const intersection = find(hitIntersections, (hit) => indexOf(hit.features, IntersectionObjectType.container) != -1 )
-				const boundKey = intersection ? intersection.key : null
-	
-				console.log('Bound to', boundKey)
-	
-				if(boundKey) {
-					newContainerCoordinates[key].boundToContainer = boundKey
-				} else {
-					newContainerCoordinates[key].boundToContainer = null
+
+			console.log('end drag', key, dX, dY, mouseDragCoords.objectLeft, mouseDragCoords.objectTop)
+
+			const newContainerValue = {
+				type: ContextEventType.patch,
+				key,
+				value: {
+					top: _r(mouseDragCoords.objectTop + dY) / globalContext.area.scale,
+					left: _r(mouseDragCoords.objectLeft + dX) / globalContext.area.scale
 				}
 			}
 
-			updateContainerCoordinates(newContainerCoordinates)
+			console.log('Update fired for ', key, newContainerValue)
+			updateContext( newContainerValue )
 			LE.hideDragContainer(document.getElementById(`${placeholderId}`))
 			setDragObjectKey(null)
 		}

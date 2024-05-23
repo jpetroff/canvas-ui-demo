@@ -1,8 +1,9 @@
 import * as React from 'react'
-import { each, extend, clone, isObject, min, reduce, find, merge } from "lodash"
+import { each, extend, clone, isObject, min, reduce, find, merge, isNumber } from "lodash"
 import type {ICanvasContainerProps, TCanvasContainerElement} from '../Container'
 import { ConnectorAttachmentType } from '../Connector'
 import { _f, _r, calcConnectorPoints, filterOverlappingPoints, filterPoints, findClosestPoints, getMutableBoundingRect, getRoundedCoords } from './utils'
+import type { TAreaContext } from '../Area'
 
 export enum ChildConnectorOrientation {
 	horizontal = 'horizontal',
@@ -16,7 +17,7 @@ declare interface ILayoutOptions {
 }
 
 type TLayoutOptionsInternal = {
-	moduleSize: number
+	moduleSize?: number
 }
 
 class LayoutEngine {
@@ -30,6 +31,92 @@ class LayoutEngine {
 		this.options = {
 			moduleSize: opts.moduleSize || 4
 		}
+	}
+
+	prepareContainerCoordinates(
+		element: Element | null,
+		key: string,
+		storedContext: TContainerDescriptor,
+		areaContext: TAreaContext,
+		parentContext?: TContainerDescriptor,
+	) : [number, number, {top: number, left: number}, {top: number, left: number}] {
+		const scaleModifier = 
+				(isNumber(storedContext.atScale) && areaContext.scale != storedContext.atScale) ?
+				storedContext.atScale : 1
+
+
+		// apply defaults even if no configuration is stored
+		const storedTop = storedContext?.top || 0 
+		const storedLeft = storedContext?.left || 0
+
+		let parent = {
+			top: storedContext?.parent?.top || 0,
+			left: storedContext?.parent?.left || 0,
+		}
+
+		let relative = {
+			top: storedContext?.relative?.top || 0,
+			left: storedContext?.relative?.left || 0
+		}
+
+		if(!storedContext || !element || !areaContext) {
+			console.log(`Undefined render with default or stored values`)
+			console.log([storedTop, storedLeft, relative, parent])
+			return [storedTop, storedLeft, relative, parent]
+		} 
+
+		const elementRect = element.getBoundingClientRect()
+		const measuredTop = elementRect.top / areaContext.scale - areaContext.top
+		const measuredLeft = elementRect.left / areaContext.scale - areaContext.left
+
+		const isAbsolute = storedContext.isAbsolute || storedContext.isExtra || storedContext.sticky
+		const isSticky = storedContext.isSticky
+		const isRelative = !isAbsolute
+
+		if(isRelative) {
+
+			console.log(`${key}————————————————————————————————————`)
+			console.log(`Key `, key,)
+			console.log(`Stored `, key, storedTop, storedLeft)
+			console.log(`Measured `, key, measuredTop, measuredLeft)
+			console.log(`Relative `, key, relative.top, relative.left)
+			console.log(`Original place `, key, measuredTop - relative.top, measuredLeft - relative.left)
+
+			relative = {
+				top: storedTop ? _r(storedTop - (measuredTop - relative.top)) : relative.top,
+				left: storedLeft ? _r(storedLeft - (measuredLeft - relative.left)) : relative.left
+			}
+			console.log(`${key} is relative`)
+
+		} else if(
+			isAbsolute && isSticky && storedContext.boundToContainer
+		) {
+			
+			parent = {
+				top: parentContext?.top,
+				left: parentContext?.left
+			}
+			relative = {
+				top: _r(measuredTop - parent.top),
+				left: _r(measuredLeft - parent.left)
+			}
+			console.log(`${key} is absolute and bound to ${storedContext.boundToContainer}`)
+
+		} else if(isAbsolute) {
+
+			parent = {
+				top: 0, left: 0
+			}
+			relative = {
+				top: _r(storedTop),
+				left: _r(storedLeft)
+			}
+			console.log(`${key} is absolute and NOT bound`)
+
+		}
+
+		console.log([storedTop, storedLeft, relative, parent])
+		return [storedTop, storedLeft, relative, parent]
 	}
 
 	needLayoutUpdate(collectionA: TContainerDescriptorCollection, collectionB: TContainerDescriptorCollection) : boolean {

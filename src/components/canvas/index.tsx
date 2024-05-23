@@ -4,7 +4,7 @@ import * as React from 'react'
 
 import Scroller from '@components/scroller'
 
-import CanvasContextProvider from './libs/context'
+import CanvasContextProvider, {TCanvasContextState} from './libs/context'
 
 import type { TCanvasContainerElement } from './Container'
 
@@ -62,7 +62,6 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 			descriptors: props.containerCoordinates,
 			connectors: props.connectors,
 			area: {
-				dragObjectKey: null,
 				scale: areaScale,
 				padding: {
 					top: 0,
@@ -72,7 +71,7 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 				}
 			}
 		}
-	} >
+	}>
 		<div className={`${props.className || ''} w-full h-full overflow-hidden transform-gpu`}>
 		{props.moduleSize > 4 && <style>{`:root { --canvas-ui-module-size: ${props.moduleSize}px } `}</style> }
 			<Scroller className="w-full h-full overflow-auto">

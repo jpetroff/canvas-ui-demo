@@ -84,7 +84,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			containers={containers}
 			containerCoordinates={containerCoordinates}
 			connectors={connectors}
-			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
+			onLayoutChange={(newLayout) => { console.log('App layout update', newLayout); setContainerCoordinates(newLayout);  } }
 			className="bg-slate2"
 		>
 			<Canvas.Layout className='grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start'>
