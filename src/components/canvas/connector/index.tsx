@@ -28,15 +28,14 @@ const Connector = React.memo<IConnectorProps>(
 		const ref = React.useRef(null)
 
 		const globalContext = useCanvasContext()
-		const scale = globalContext.area.scale
 
 		const padding = 32
 
-		const top = (props.top - padding) / scale
-		const left = (props.left - padding) / scale
+		const top = (props.top - padding)
+		const left = (props.left - padding)
 
-		const w = (props.w + 2*padding) / scale
-		const h = (props.h + 2*padding) / scale
+		const w = (props.w + 2*padding)
+		const h = (props.h + 2*padding)
 
 		const style = {
 			top: top+'px',
@@ -55,13 +54,13 @@ const Connector = React.memo<IConnectorProps>(
 				ctx.strokeStyle = "#818cf8"
 
 				const start = [
-					(props.start.x + padding) / scale,
-					(props.start.y + padding) / scale
+					(props.start.x + padding),
+					(props.start.y + padding)
 				]
 
 				const end = [
-					(props.end.x + padding) / scale,
-					(props.end.y + padding) / scale
+					(props.end.x + padding),
+					(props.end.y + padding)
 				]
 
 				const cpStart = bezierControlPoint(props.start, ctx.canvas.width / 2, ctx.canvas.height / 2, padding)

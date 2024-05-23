@@ -35,7 +35,7 @@ function updateGlobalState(state: TCanvasContextState, event: CanvasEvent) : TCa
 			return handleReplace(state, event.value)
 		}
 		case ContextEventType.patch : {
-			return handlePatch(state, event.value)
+			return handlePatch(state, event.value, event.key || null)
 		}
 		case ContextEventType.delete : {
 			return handleDelete(state, event.key)
@@ -82,8 +82,9 @@ function handlePatch(
 ) {
 	try {
 		const newState = extend({}, state)
+		console.log(_value, isObject(_value) && key)
 
-		if(!isArray(_value) && key) {
+		if(isObject(_value) && key) {
 			newState.descriptors[key] = extend({}, newState.descriptors[key], _value)
 			return newState
 		}
@@ -100,6 +101,7 @@ function handlePatch(
 		}
 
 		console.warn(`Invalid value provided for patch handler:`, _value)
+		return newState
 	} catch(err) {
 		console.warn('Failed to execute state patch on', _value)
 		console.error(err)
@@ -164,11 +166,13 @@ export type CanvasEvent =
 	{
 		type: ContextEventType.replace
 		value: TContainerDescriptor[] | TContainerDescriptorCollection
+		key?: string
 	}
 	|
 	{
 		type: ContextEventType.patch
 		value: Partial<TContainerDescriptor>[]
+		key?: string
 	}
 	|
 	{
@@ -185,4 +189,5 @@ export type CanvasEvent =
 	{
 		type: ContextEventType.resize,
 		value: Partial<TAreaContext>
+		key?: string
 	}

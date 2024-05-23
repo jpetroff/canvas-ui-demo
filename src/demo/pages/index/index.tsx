@@ -22,23 +22,25 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	const navigate = useNavigate()
 	const location = useLocation()
 
+	const ref = React.useRef(null)
+
 	const [storedDescriptors, storeDescriptors, removeDescriptors] = useLocalStorage<IContainerDescriptorPropCollection>('test-app-storage-descriptors')
 	const [storedConnectors, storeConnectors, removeConnectors] = useLocalStorage<TConnectorPathList>('test-app-storage-connectors')
 
 	const [containers, setContainers] = React.useState([
 		<Canvas.Container canvasKey='entry-form' key='entry-form'>
-			<TestForm className='p-4' />
+			<div><TestForm className='p-4' /></div>
 		</Canvas.Container>,
-		<Canvas.Container canvasKey='second-form' key='second-form'>
+		<Canvas.Container ref={ref} canvasKey='second-form' key='second-form'>
 			<Card className='p-4'>
-				<React.Fragment key='dsiqjfi0oqwejdfsefkinn'>
-					<p>Test new</p>
-					<p className='dsada'>Second child 1</p>
-					<p>Second child 2</p>
-					<Canvas.Section canvasKey='second-form#option1'>
-						<p>Named section 3</p>
-					</Canvas.Section>
-				</React.Fragment>
+				<p>Test new</p>
+				<p className='dsada'>Second child 1</p>
+				<p>Second child 2</p>
+				<Canvas.Section canvasKey='second-form#option1'>
+					<div>
+					Named section
+					</div>
+				</Canvas.Section>
 			</Card>
 		</Canvas.Container>,
 		<Canvas.Container canvasKey='entry-form-2' key='entry-form-2'>
@@ -60,7 +62,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorPropCollection>(storedDescriptors || {})
 	const [connectors, setConnectors] = React.useState<TConnectorPathList>(storedConnectors || [
 		{from: 'entry-form', to: 'entry-form-2'},
-		{from: 'second-form', to: 'entry-form-4'}
+		{from: 'second-form#option1', to: 'entry-form-4'}
 	])
 
 	function handleContainerAdd() {

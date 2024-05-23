@@ -26,10 +26,10 @@ declare type TContainerRect =
 	TRect & {
 		key: string
 		index: number
-		isAbsolute?: boolean
+		isAbsolute: boolean
 		canBeBound?: boolean
 		boundToContainer?: string
-		
+		atScale: number
 	}
 
 declare type TContainerDescriptorPropItem = {
