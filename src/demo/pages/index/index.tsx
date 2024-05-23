@@ -29,7 +29,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 
 	const [containers, setContainers] = React.useState([
 		<Canvas.Container canvasKey='entry-form' key='entry-form'>
-			<div><TestForm className='p-4' /></div>
+			<TestForm className='p-4' />
 		</Canvas.Container>,
 		<Canvas.Container ref={ref} canvasKey='second-form' key='second-form'>
 			<Card className='p-4'>

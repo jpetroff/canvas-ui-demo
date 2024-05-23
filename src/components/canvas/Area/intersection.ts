@@ -36,7 +36,7 @@ function checkIntersection(
 			if(container.getAttribute('data-canvas-zone')) features.push(IntersectionObjectType.definedZone)
 			if(container.getAttribute('data-canvas-section')) features.push(IntersectionObjectType.namedSection)
 
-			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].canBeBound) 
+			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].sticky) 
 				features.push(IntersectionObjectType.stickyContainer)
 
 			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].isExtra) 

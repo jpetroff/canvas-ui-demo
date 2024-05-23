@@ -82,7 +82,6 @@ function handlePatch(
 ) {
 	try {
 		const newState = extend({}, state)
-		console.log(_value, isObject(_value) && key)
 
 		if(isObject(_value) && key) {
 			newState.descriptors[key] = extend({}, newState.descriptors[key], _value)

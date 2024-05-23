@@ -62,8 +62,6 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 	const globalContext = useCanvasContext()
 	const updateContext = useCanvasDispatch()
 
-	console.log(`→→→→→ Area knows`, globalContext)
-
 	const selfRef = React.useRef<HTMLDivElement>(null)
 
 	const multiRef = useForkRef(ref, selfRef)
@@ -89,7 +87,6 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 	}
 
 	useDidMount( () => {
-		console.log(globalContext, updateContext, selfRef)
 		const areaRects = selfRef.current.getBoundingClientRect()
 		updateContext({
 			type: ContextEventType.resize,
@@ -102,7 +99,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 				padding: globalContext.area.padding
 			}
 		})
-		console.log('------------------- from mount ----------------')
+		console.log('------------------- from area mount ----------------')
     // const newContainerDescriptorCollection = recalcLayout()
     // if(newContainerDescriptorCollection !== null) {
     //  updateContainerCoordinates(newContainerDescriptorCollection)
@@ -110,27 +107,24 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		if(props.onMount && isFunction(props.onMount)) props.onMount()
 	})
 
-	function recalcLayout(): TContainerDescriptorCollection | null {
-		const childContainers = [ 
-		...Array.from(selfRef.current.querySelectorAll(`[data-canvas-container]`)), 
-		] as (HTMLElement & TCanvasContainerElement)[]
+	// function recalcLayout(): TContainerDescriptorCollection | null {
+	// 	const childContainers = [ 
+	// 	...Array.from(selfRef.current.querySelectorAll(`[data-canvas-container]`)), 
+	// 	] as (HTMLElement & TCanvasContainerElement)[]
 
-		const currentBoundingRects = LE.calcBoundingRects(childContainers)
+	// 	const currentBoundingRects = LE.calcBoundingRects(childContainers)
 
-		const newContainerDescriptorCollection = LE.calcLayout(
-			currentBoundingRects,
-			globalContext.descriptors
-		)
+	// 	const newContainerDescriptorCollection = LE.calcLayout(
+	// 		currentBoundingRects,
+	// 		globalContext.descriptors
+	// 	)
 
-		console.log(globalContext.descriptors, newContainerDescriptorCollection)
+	// 	const layoutChanged = LE.needLayoutUpdate(
+	// 		globalContext.descriptors, newContainerDescriptorCollection
+	// 	)
 
-		const layoutChanged = LE.needLayoutUpdate(
-			globalContext.descriptors, newContainerDescriptorCollection
-		)
-    console.log(layoutChanged)
-
-		return layoutChanged ? newContainerDescriptorCollection : null
-	}
+	// 	return layoutChanged ? newContainerDescriptorCollection : null
+	// }
 
 	// React.useLayoutEffect( () => {
   //   console.log('------------------- from effect ----------------')
@@ -227,8 +221,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 				(result, _container) => {
 					const container = _container
 					if(
-						_container.key == key ||
-						_container.boundToContainer == key
+						_container.key == key
 					) {
 						console.log('Updated container', key)
 						container.relative.left = container.relative.left + dX / globalContext.area.scale
@@ -238,7 +231,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 					return container
 			}, {})
 
-			if(newContainerCoordinates[key].canBeBound) {
+			if(newContainerCoordinates[key].sticky) {
 				const hitIntersections = checkIntersection(
 					selfRef.current,
 					event.clientX, event.clientY,
@@ -299,7 +292,6 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		leftShift = (globalContext.area.width - globalContext.area.width * globalContext.area.scale) / 2
 	}
 
-	console.log(`area debug`, globalContext.area)
 	return <div ref={multiRef}
 		className={`${props.className || ''} ${dragUserSelectClass} ${showGridClass} relative min-w-full min-h-full`}
 		onMouseDown={handleDragStart}

@@ -27,21 +27,24 @@ declare type TContainerRect =
 		key: string
 		index: number
 		isAbsolute: boolean
-		canBeBound?: boolean
+		sticky?: boolean
 		boundToContainer?: string
 		atScale: number
+		parent?: {
+			left: number,
+			top: number
+		}
 	}
 
 declare type TContainerDescriptorPropItem = {
 	isExtra?: boolean
-	canBeBound?: boolean
+	sticky?: boolean
 	boundToContainer?: string
 	// relative values stored by client
 	relative?: {
 		left: number,
 		top: number
 	}
-	_lastKnownAttachedToCoords?: {key: string} & TRect
 }
 
 declare interface IContainerDescriptorPropCollection {

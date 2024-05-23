@@ -54,8 +54,6 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	}
 	const canvasRef = React.useRef<HTMLDivElement>(null)
 
-	console.log(`→→→→→ props passed`, props.containerCoordinates)
-
 	const areaScale = (props.scale >= 0.5 && props.scale <= 1) ? props.scale : 1
 
 	return (

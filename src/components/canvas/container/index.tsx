@@ -4,9 +4,10 @@
 
 import * as React from 'react'
 import useCustomCompareEffect, { useDidMount, useForkRef, useResizeObserver } from '../libs/custom-hooks'
-import { merge, isFunction, isNumber, isEqual } from 'lodash'
+import { merge, isFunction, isNumber, isEqual, isObject } from 'lodash'
 import { mergeReactProps } from '../libs/merge-react-props'
 import { ContextEventType, useCanvasContext, useCanvasDispatch } from '../libs/context'
+import { _r } from '../libs/utils'
 
 
 
@@ -46,39 +47,86 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 			return null;
 		}
 
+		const currentContext = globalContext.descriptors[props.canvasKey] || {}
+
+		let updateDeps = [globalContext.area, currentContext]
+		if(currentContext.sticky && currentContext.boundToContainer) {
+			updateDeps.push(globalContext.descriptors[currentContext.boundToContainer])
+		} else { updateDeps.push(null) } 
+
 		const updateSelfCoordinates = () => {
-			console.log(`WTREF `, selfRef, forkRef, ref)
-			if(!selfRef.current) {
-				console.warn(`selfRef not defined, cannot update container coordinates ${canvasKey}`)
-				return 
-			}
 			if(!globalContext || !globalContext.area || !globalContext.area.top || !globalContext.area.left) {
 				console.log(`skipping update ${canvasKey}, area not initialized`)
 				return 
 			}
-			const currentContext = globalContext.descriptors[canvasKey] || {}
+			if(!selfRef.current) {
+				console.warn(`selfRef not defined, cannot update container coordinates ${canvasKey}`)
+				return 
+			}
+
 			const rects = selfRef.current.getBoundingClientRect()
 			const scaleModifier = 
 				(isNumber(currentContext.atScale) && globalContext.area.scale != currentContext.atScale) ?
 				currentContext.atScale : 1
 
+			let top = (rects.top - globalContext.area.top) / scaleModifier
+			let left = (rects.left - globalContext.area.left) / scaleModifier
+
+			let relativeTop =  currentContext.relative?.top || 0
+			let relativeLeft =  currentContext.relative?.left || 0
+
+			let parentTop = currentContext.parent?.top || 0
+			let parentLeft = currentContext.parent?.top || 0
+
+			const bindingContainer = globalContext.descriptors[currentContext.boundToContainer]
+			const hasValidBindingContainer = currentContext.sticky && currentContext.boundToContainer && isObject(bindingContainer)
+
+			if(
+				hasValidBindingContainer &&
+				currentContext.parent?.top != bindingContainer.top && 
+				currentContext.parent?.top != bindingContainer.left
+			) {
+				parentTop = bindingContainer.top + bindingContainer.relative.top
+				parentLeft = bindingContainer.left + bindingContainer.relative.left
+				top = parentTop + relativeTop
+				left = parentLeft + relativeLeft
+			} else if (currentContext.sticky && !currentContext.boundToContainer) {
+				parentTop = 0
+				parentLeft = 0
+				relativeTop = top
+				relativeLeft = left
+			}
+
+			// console.log(!currentContext.boundToContainer, currentContext.parent, ` == `, [bindingContainer.top, bindingContainer.left])
+
+			const newDescriptor =  {
+				// props depend on possible parent or sticky container
+				top: _r(top),
+				left: _r(left),
+				relative: {
+					top: _r(relativeTop),
+					left: _r(relativeLeft)
+				},
+				parent: {
+					top: _r(parentTop),
+					left: _r(parentLeft)
+				},
+
+				// independent objective props
+				width: rects.width / scaleModifier,
+				height: rects.height / scaleModifier,
+				key: canvasKey,
+				isAbsolute: isAbsolute || isExtra || currentContext.isAbsolute,
+				sticky: !!canBound || currentContext.sticky || undefined,
+				atScale: globalContext.area.scale
+			}
+
+			if(isEqual(newDescriptor, currentContext)) return
+
 			updateContext({
 				type: ContextEventType.patch,
 				key: canvasKey,
-				value: {
-					top: (rects.top - globalContext.area.top) / scaleModifier,
-					left: (rects.left - globalContext.area.left) / scaleModifier,
-					width: rects.width / scaleModifier,
-					height: rects.height / scaleModifier,
-					key: canvasKey,
-					isAbsolute: isAbsolute || isExtra || currentContext.isAbsolute,
-					canBeBound: !!canBound || currentContext?.canBeBound || undefined,
-					atScale: globalContext.area.scale,
-					relative: {
-						top: currentContext?.relative?.top || 0,
-						left: currentContext?.relative?.left || 0
-					}
-				}
+				value: newDescriptor
 			})
 		}
 
@@ -87,39 +135,40 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 		})
 
 		useCustomCompareEffect( () => {
-			console.log('EFFECT Local context', globalContext.descriptors[canvasKey])
+			console.log('EFFECT Local context', canvasKey, globalContext.descriptors[canvasKey])
 			updateSelfCoordinates()
-		}, [globalContext.area, globalContext.descriptors[canvasKey]], isEqual)
+		}, updateDeps, isEqual)
 		
 		useDidMount( () => {
-			console.log(`WTREF `, selfRef, forkRef, ref)
-			console.log('Local context', globalContext.descriptors[canvasKey])
 			if(containerProps.onMount && isFunction(containerProps.onMount)) 
 				containerProps.onMount()
 		})
 	
 		containerProps.className = `${containerProps.className || ''} inline-block ${isExtra ? 'absolute' : 'relative'} cursor-grab [&_*]:cursor-auto`
 		const compositionProps = mergeReactProps(containerProps, children.props)
-	
-		const currentContext = globalContext.descriptors[props.canvasKey]
+		
+		// console.log(currentContext, currentContext?.relative?.top, isNumber(currentContext?.relative?.top + currentContext?.parent?.top),currentContext?.relative?.top + currentContext?.parent?.top )
+
 	
 		const applyProps = {
 			ref: forkRef,
 			style: {
-				top: currentContext?.relative?.top ? currentContext.relative.top+'px' : null,
-				left: currentContext?.relative?.left ? currentContext.relative.left+'px' : null
+				top: 	currentContext?.relative && currentContext?.parent
+							? (currentContext.parent.top + currentContext.relative.top)+'px' 
+							: 0,
+				left:	currentContext?.relative && currentContext?.parent
+							? (currentContext.parent.left + currentContext.relative.left)+'px' 
+							: 0
 			},
 			key: canvasKey,
 			['data-key']: canvasKey,
 			['data-canvas-container']: true,
 			['data-canvas-absolute']: isExtra || isAbsolute || currentContext?.isExtra,
 			['data-canvas-bound']: currentContext?.boundToContainer || boundTo || undefined,
-			['data-canvas-allow-bound']: !!canBound || currentContext?.canBeBound || undefined,
+			['data-canvas-allow-bound']: !!canBound || currentContext?.sticky || undefined,
 		}
+
 	
-		// return <div className={`${props.className || ''} border-2 border-transparent hover:border-blue-500 relative`} {...applyProps}>
-		// 	{children}
-		// </div>
 		return React.cloneElement(children, { ...compositionProps, ...applyProps })
 	} catch(err) {
 		console.error(err)

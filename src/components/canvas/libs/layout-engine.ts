@@ -80,7 +80,7 @@ class LayoutEngine {
 					width: _f(boundingRect.width),
 					height: _f(boundingRect.height),
 					isAbsolute: !!element.getAttribute('data-canvas-absolute') || void 0,
-					canBeBound: !!element.getAttribute('data-canvas-allow-bound') || void 0,
+					sticky: !!element.getAttribute('data-canvas-allow-bound') || void 0,
 					boundToContainer: element.getAttribute('data-canvas-bound') || void 0
 				})
 			}
@@ -108,28 +108,28 @@ class LayoutEngine {
 						top: (userProps[key] && userProps[key].relative) ? userProps[key].relative.top : 0,
 					}
 
-					if(
-						(userProps[key] && userProps[key].boundToContainer) ||
-						(containerCalcRect.canBeBound && containerCalcRect.boundToContainer)
-					) {
-						const relatedContainerKey = userProps[key]?.boundToContainer || containerCalcRect.boundToContainer
-						const relatedContainer = find(currentBoundingRects, {key: relatedContainerKey})
-						console.log('init bound coords', containerCalcRect.key, '→', relatedContainer, userProps[key]?.relative)
-						if(relatedContainer && !userProps[key]?.relative) {
-							result[key].relative.left = relatedContainer.left
-							result[key].relative.top = relatedContainer.top
-						} else if(
-							relatedContainer && userProps[key]?._lastKnownAttachedToCoords &&
-							relatedContainer.key == userProps[key]._lastKnownAttachedToCoords.key && 
-							(
-								userProps[key]._lastKnownAttachedToCoords.top != relatedContainer.top ||
-								userProps[key]._lastKnownAttachedToCoords.left != relatedContainer.left ||
-								userProps[key]._lastKnownAttachedToCoords.width != relatedContainer.width ||
-								userProps[key]._lastKnownAttachedToCoords.height != relatedContainer.height 
-							)
-						) {
-							console.log('~~~~~~LKAC', userProps[key]?._lastKnownAttachedToCoords, relatedContainer)
-							console.log(key, result[key].top, result[key].left)
+					// if(
+					// 	(userProps[key] && userProps[key].boundToContainer) ||
+					// 	(containerCalcRect.sticky && containerCalcRect.boundToContainer)
+					// ) {
+					// 	const relatedContainerKey = userProps[key]?.boundToContainer || containerCalcRect.boundToContainer
+					// 	const relatedContainer = find(currentBoundingRects, {key: relatedContainerKey})
+					// 	console.log('init bound coords', containerCalcRect.key, '→', relatedContainer, userProps[key]?.relative)
+					// 	if(relatedContainer && !userProps[key]?.relative) {
+					// 		result[key].relative.left = relatedContainer.left
+					// 		result[key].relative.top = relatedContainer.top
+					// 	} else if(
+					// 		relatedContainer && userProps[key]?._lastKnownAttachedToCoords &&
+					// 		relatedContainer.key == userProps[key]._lastKnownAttachedToCoords.key && 
+					// 		(
+					// 			userProps[key]._lastKnownAttachedToCoords.top != relatedContainer.top ||
+					// 			userProps[key]._lastKnownAttachedToCoords.left != relatedContainer.left ||
+					// 			userProps[key]._lastKnownAttachedToCoords.width != relatedContainer.width ||
+					// 			userProps[key]._lastKnownAttachedToCoords.height != relatedContainer.height 
+					// 		)
+					// 	) {
+					// 		console.log('~~~~~~LKAC', userProps[key]?._lastKnownAttachedToCoords, relatedContainer)
+					// 		console.log(key, result[key].top, result[key].left)
 							//on resize trying to recalculate from last known parent coordinates
 							// each(['top', 'left'], (side) => {
 							// 	const dimension = side == 'top' ? 'height' : 'width'
@@ -151,16 +151,16 @@ class LayoutEngine {
 							// result[key].top -= _r(
 							// 	(userProps[key]._lastKnownAttachedToCoords.top - relatedContainer.top)
 							// )
-							console.log(key, result[key].top, result[key].left)
-						}
-						result[key]._lastKnownAttachedToCoords = {
-							left: relatedContainer.left,
-							top: relatedContainer.top,
-							width: relatedContainer.width,
-							height: relatedContainer.height,
-							key: relatedContainer.key
-						}
-					}
+						// 	console.log(key, result[key].top, result[key].left)
+						// }
+						// result[key]._lastKnownAttachedToCoords = {
+						// 	left: relatedContainer.left,
+						// 	top: relatedContainer.top,
+						// 	width: relatedContainer.width,
+						// 	height: relatedContainer.height,
+						// 	key: relatedContainer.key
+						// }
+					// }
 
 					return result
 
@@ -260,11 +260,11 @@ class LayoutEngine {
 		const CCO = ChildConnectorOrientation
 		const CAT = ConnectorAttachmentType
 
-		console.log('elem',element)
+		// console.log('elem',element)
 
 
 		let result = getMutableBoundingRect(elementRects)
-		console.log(result)
+		// console.log(result)
 		if(parent) {
 			const parentRects = parent.getBoundingClientRect()
 			result.top = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top: elementRects.top
@@ -285,7 +285,7 @@ class LayoutEngine {
 		} else {
 			availableConnectorPoints = [CAT.top, CAT.bottom, CAT.left, CAT.right]
 		}
-		console.log(result)
+		// console.log(result)
 		return [
 			getRoundedCoords(result, offset),
 			availableConnectorPoints
@@ -319,8 +319,8 @@ class LayoutEngine {
 				const [startContainer, startAttachment] = this.getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
 				const [endContainer, endAttachment] = this.getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
 
-				console.log('Coords', startContainer, endContainer)
-				console.log('attachment', startElemHasParent, startAttachment, endElemHasParent, endAttachment)
+				// console.log('Coords', startContainer, endContainer)
+				// console.log('attachment', startElemHasParent, startAttachment, endElemHasParent, endAttachment)
 
 				const startConnectorPoints = 
 				filterOverlappingPoints(

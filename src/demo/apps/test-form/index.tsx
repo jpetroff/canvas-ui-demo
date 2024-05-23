@@ -4,10 +4,10 @@ import { Card, Box, Text, Flex, TextField, CardProps } from '@radix-ui/themes'
 interface ITestForm extends CardProps {
 }
 
-const TestForm: React.FunctionComponent<ITestForm> = (props) => {
+const TestForm = React.forwardRef<HTMLDivElement, ITestForm> ((props, ref) => {
 
   return (
-    <Card {...props}>
+    <Card ref={ref} {...props}>
       <Flex direction="column" gap="2">
         <label>
           <Text as="div" size="2" mb="1" weight="bold">
@@ -30,6 +30,6 @@ const TestForm: React.FunctionComponent<ITestForm> = (props) => {
       </Flex>
     </Card>
     )
-};
+});
 
 export default TestForm;
