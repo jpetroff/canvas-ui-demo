@@ -14,13 +14,13 @@ export type IntersectionElement = {
 	features: IntersectionObjectType[]
 }
 
-function checkIntersection(
+export function checkIntersection(
 	canvasElement: Element,
 	clientX: number, clientY: number,
-	containerDescriptorCollection: TContainerDescriptorCollection
+	containerDescriptorCollection: IContainerDescriptorCollection
 ) : IntersectionElement[] {
 	let result = []
-	const _allContainers = canvasElement.querySelectorAll(`[data-canvas-container],[data-canvas-container-section]`)
+	const _allContainers = canvasElement.querySelectorAll(`[data-canvas-container],[data-canvas-container-zone]`)
 	_allContainers.forEach( (container) => {
 		const rects = container.getBoundingClientRect()
 		if(
@@ -36,13 +36,13 @@ function checkIntersection(
 			if(container.getAttribute('data-canvas-zone')) features.push(IntersectionObjectType.definedZone)
 			if(container.getAttribute('data-canvas-section')) features.push(IntersectionObjectType.namedSection)
 
-			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].canBeBound) 
+			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].sticky) 
 				features.push(IntersectionObjectType.stickyContainer)
 
-			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].isExtra) 
+			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].sticky) 
 				features.push(IntersectionObjectType.extraContainer)
 
-			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].isAbsolute) 
+			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].absolute) 
 				features.push(IntersectionObjectType.absoluteContainer)
 
 			result.push({
@@ -54,5 +54,3 @@ function checkIntersection(
 
 	return result
 }
-
-export default checkIntersection

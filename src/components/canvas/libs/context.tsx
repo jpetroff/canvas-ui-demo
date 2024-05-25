@@ -5,8 +5,8 @@ import * as React from 'react'
 const CanvasContext = React.createContext<TCanvasContextState>(null)
 const CanvasContextEvent = React.createContext<React.Dispatch<CanvasEvent>>(null)
 
-type TCanvasContextState = {
-	descriptors: { [key: string ]: Partial<TContainerDescriptor> }
+export type TCanvasContextState = {
+	descriptors: IContainerDescriptorCollection
 	connectors: TConnectorPathList
 	area: TAreaContext
 }
@@ -17,7 +17,13 @@ interface ICanvasContextProviderProps {
 }
 
 const CanvasContextProvider: React.FunctionComponent<ICanvasContextProviderProps> = (props) => {
-	const [globalState, updateState] = React.useReducer(updateGlobalState, props.value)
+	const [_globalState, updateState] = React.useReducer(updateGlobalState, props.value)
+
+	const globalState = {
+		area: _globalState.area,
+		connectors: props.value.connectors,
+		descriptors: props.value.descriptors
+	}
 
 
 	return (
@@ -27,6 +33,16 @@ const CanvasContextProvider: React.FunctionComponent<ICanvasContextProviderProps
 			</CanvasContextEvent.Provider>
 		</CanvasContext.Provider>
 	)
+}
+
+export default CanvasContextProvider
+
+export function useCanvasContext() : TCanvasContextState {
+	return React.useContext(CanvasContext)
+}
+
+export function useCanvasDispatch() {
+	return React.useContext(CanvasContextEvent)
 }
 
 function updateGlobalState(state: TCanvasContextState, event: CanvasEvent) : TCanvasContextState {
@@ -48,7 +64,7 @@ function updateGlobalState(state: TCanvasContextState, event: CanvasEvent) : TCa
 
 function handleReplace(
 	state: TCanvasContextState, 
-	values: TContainerDescriptor[] | TContainerDescriptorCollection
+	values: TContainerMeasure[] | IContainerDescriptorCollection
 ) {
 	try {
 		if(!isArray(values) && isObject(values))
@@ -77,7 +93,7 @@ function handleReplace(
 
 function handlePatch(
 	state: TCanvasContextState, 
-	_value: Partial<TContainerDescriptor> | Partial<TContainerDescriptor>[],
+	_value: Partial<TContainerMeasure> | Partial<TContainerMeasure>[],
 	key: string = null
 ) {
 	try {
@@ -143,16 +159,6 @@ function handleResize(
 	}
 }
 
-export default CanvasContextProvider
-
-export function useCanvasContext() : TCanvasContextState {
-	return React.useContext(CanvasContext)
-}
-
-export function useCanvasDispatch() {
-	return React.useContext(CanvasContextEvent)
-}
-
 export enum ContextEventType {
 	replace = 'replace',
 	patch = 'patch',
@@ -163,18 +169,18 @@ export enum ContextEventType {
 export type CanvasEvent = 
 	{
 		type: ContextEventType.replace
-		value: TContainerDescriptor[] | TContainerDescriptorCollection
+		value: TContainerMeasure[] | IContainerDescriptorCollection
 	}
 	|
 	{
 		type: ContextEventType.patch
-		value: Partial<TContainerDescriptor>[]
+		value: Partial<TContainerMeasure>[]
 	}
 	|
 	{
 		type: ContextEventType.patch
 		key: string
-		value: Partial<TContainerDescriptor>
+		value: Partial<TContainerMeasure>
 	}
 	|
 	{

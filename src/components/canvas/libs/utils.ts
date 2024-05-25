@@ -11,6 +11,15 @@ export const _f = Math.floor
 
 export const _c = Math.ceil
 
+export function upscale(value: number, scale: number) {
+	try {
+		const _value = value || 0
+		return _r(_value/scale)
+	} catch(err) {	
+		console.warn(`Upscale failed (${value}/${scale}):`, err)
+	}
+}
+
 export const getAttachmentType =  (
 	x: number,
 	y: number,

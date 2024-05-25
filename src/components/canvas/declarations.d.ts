@@ -26,35 +26,52 @@ declare type TContainerRect =
 	TRect & {
 		key: string
 		index: number
-		isAbsolute?: boolean
-		canBeBound?: boolean
+		absolute?: boolean
+		sticky?: boolean
 		boundToContainer?: string
 		
 	}
 
 declare type TContainerDescriptorPropItem = {
-	isExtra?: boolean
-	canBeBound?: boolean
-	boundToContainer?: string
+	extra?: boolean
+	absolute?: boolean
+	sticky?: boolean
+	stickTo?: string
+	resizable?: boolean
 	// relative values stored by client
 	relative?: {
 		left: number,
 		top: number
 	}
-	_lastKnownAttachedToCoords?: {key: string} & TRect
+	width: number,
+	height: number,
+	parent?: {
+		left: number,
+		top: number,
+		width: number,
+		height: number
+	}
 }
 
-declare interface IContainerDescriptorPropCollection {
-	[key: string]: TContainerDescriptorPropItem
-}
+declare type TContainerDescriptor = TContainerDescriptorPropItem
 
-declare type TContainerDescriptor = 
-	TContainerRect & 
-	ContainerDescriptorPropItem
-
-declare type TContainerDescriptorCollection = {
+declare interface IContainerDescriptorCollection {
 	[key: string]: TContainerDescriptor
 }
+
+declare type TContainerMeasure = TContainerDescriptor & {
+	offset: {
+		left: number
+		top: number
+	}
+	left: number
+	top: number
+	width: number
+	height: number
+	key: string
+}
+
+declare type TContainerMeasureDict = Dictionary<TContainerMeasure>
 
 declare type TContainerList = (HTMLElement & TCanvasContainerElement)[]
 
@@ -62,6 +79,7 @@ declare type TConnectorPath = {
 	from: string,
 	to: string
 }
+
 type TConnectorPathList = TConnectorPath[]
 
 declare type TConnectorPoint = {

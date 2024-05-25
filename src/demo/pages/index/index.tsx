@@ -22,7 +22,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	const navigate = useNavigate()
 	const location = useLocation()
 
-	const [storedDescriptors, storeDescriptors, removeDescriptors] = useLocalStorage<IContainerDescriptorPropCollection>('test-app-storage-descriptors')
+	const [storedDescriptors, storeDescriptors, removeDescriptors] = useLocalStorage<IContainerDescriptorCollection>('test-app-storage-descriptors')
 	const [storedConnectors, storeConnectors, removeConnectors] = useLocalStorage<TConnectorPathList>('test-app-storage-connectors')
 
 	const [containers, setContainers] = React.useState([
@@ -31,14 +31,12 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 		</Canvas.Container>,
 		<Canvas.Container canvasKey='second-form' key='second-form'>
 			<Card className='p-4'>
-				<React.Fragment key='dsiqjfi0oqwejdfsefkinn'>
-					<p>Test new</p>
-					<p className='dsada'>Second child 1</p>
-					<p>Second child 2</p>
-					<Canvas.Section canvasKey='second-form#option1'>
-						<p>Named section 3</p>
-					</Canvas.Section>
-				</React.Fragment>
+				<p>Test new</p>
+				<p className='dsada'>Second child 1</p>
+				<p>Second child 2</p>
+				<Canvas.Section canvasKey='second-form#option1'>
+					<p>Named section 3</p>
+				</Canvas.Section>
 			</Card>
 		</Canvas.Container>,
 		<Canvas.Container canvasKey='entry-form-2' key='entry-form-2'>
@@ -50,14 +48,14 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 		<Canvas.Container canvasKey='entry-form-4' key='entry-form-4'>
 			<TestForm className='p-4' />
 		</Canvas.Container>,
-		<Canvas.Container isExtra={true} canBound={true} boundTo='entry-form-3' canvasKey='entry-form-3-note' key='entry-form-3-note'>
+		<Canvas.Container extra={true} sticky={true} stickTo='entry-form-3' canvasKey='entry-form-3-note' key='entry-form-3-note'>
 			<Box className='absolute bg-yellow-200 rounded-md w-[96px] h-[96px] shadow-md flex items-center text-center text-sm'>Don’t forget this</Box>
 		</Canvas.Container>,
-		<Canvas.Container isExtra={true} canBound={true} canvasKey='entry-form-2-comment' key='entry-form-2-comment' top={10} left={24} >
+		<Canvas.Container extra={true} sticky={true} canvasKey='entry-form-2-comment' key='entry-form-2-comment'>
 			<CommentBubble initials='J' />
 		</Canvas.Container>
 	])
-	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorPropCollection>(storedDescriptors || {})
+	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorCollection>(storedDescriptors || {})
 	const [connectors, setConnectors] = React.useState<TConnectorPathList>(storedConnectors || [
 		{from: 'entry-form', to: 'entry-form-2'},
 		{from: 'second-form#option1', to: 'entry-form-4'}
@@ -78,18 +76,17 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			<Button onClick={handleContainerAdd}>Create new container</Button>
 		</Sidebar>
 		<Canvas
-			scale={0.5}
-			containers={containers}
+			scale={1}
 			containerCoordinates={containerCoordinates}
 			connectors={connectors}
 			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
 			className="bg-slate2"
 		>
 			<Canvas.Layout className='grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start'>
-				{filter(containers, (container) => container.props.isExtra != true)}
+				{filter(containers, (container) => container.props.extra != true)}
 			</Canvas.Layout>
 			<Canvas.Extras>
-				{filter(containers, (container) => container.props.isExtra == true)}
+				{filter(containers, (container) => container.props.extra == true)}
 			</Canvas.Extras>
 		</Canvas>
 	</div>

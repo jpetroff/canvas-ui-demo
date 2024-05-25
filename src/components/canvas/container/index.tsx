@@ -12,26 +12,22 @@ import { useCanvasContext, useCanvasDispatch } from '../libs/context'
 
 export interface ICanvasContainerProps extends React.HTMLProps<HTMLElement> {
 	canvasKey?: string
-	top?: number
-	left?: number
-	w?: number
-	h?: number
 	onMount?: () => void
 	children?: React.ReactNode
-	isExtra?: boolean
-	isAbsolute?: boolean
-	boundTo?: string
-	canBound?: boolean
+	extra?: boolean
+	absolute?: boolean
+	stickTo?: string
+	sticky?: boolean
 }
 
 const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, ref) => {
 	const {
 		children, 
 		canvasKey, 
-		isExtra, 
-		boundTo,
-		canBound,
-		isAbsolute,
+		extra, 
+		stickTo,
+		sticky,
+		absolute,
 		...containerProps
 	} = props
 
@@ -48,10 +44,12 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 				containerProps.onMount()
 		})
 	
-		containerProps.className = `${containerProps.className || ''} inline-block ${isExtra ? 'absolute' : 'relative'} cursor-grab [&_*]:cursor-auto`
+		containerProps.className = `${containerProps.className || ''} inline-block ${extra || absolute ? 'absolute' : 'relative'} cursor-grab [&_*]:cursor-auto`
 		const compositionProps = mergeReactProps(containerProps, children.props)
 	
 		const currentContext = globalContext.descriptors[props.canvasKey]
+
+		// console.log(`Prerender context`,canvasKey,currentContext)
 	
 		const fullProps = merge({
 			style: {
@@ -61,9 +59,9 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 			key: canvasKey,
 			['data-key']: canvasKey,
 			['data-canvas-container']: true,
-			['data-canvas-absolute']: isExtra || isAbsolute || currentContext?.isExtra,
-			['data-canvas-bound']: currentContext?.boundToContainer || boundTo || undefined,
-			['data-canvas-allow-bound']: !!canBound || currentContext?.canBeBound || undefined,
+			['data-canvas-absolute']: extra || absolute || currentContext?.extra,
+			['data-canvas-stick-to']: currentContext?.stickTo || stickTo || undefined,
+			['data-canvas-sticky']: !!sticky || currentContext?.sticky || undefined,
 		}, compositionProps)
 	
 		const childrenProps = {

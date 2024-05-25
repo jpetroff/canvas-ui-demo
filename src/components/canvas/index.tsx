@@ -18,22 +18,12 @@ import Extras from './Extras'
 
 
 interface ICanvasProps extends React.HTMLProps<HTMLElement> {
-	containers: React.ReactElement<TCanvasContainerElement>[]
-	containerCoordinates: IContainerDescriptorPropCollection
-	connectors: TConnectorPathList
-	onLayoutChange: (newLayout: IContainerDescriptorPropCollection) => void
+	connectors: TConnectorPath[]
+	containerCoordinates: IContainerDescriptorCollection
+	onLayoutChange: (newLayout: IContainerDescriptorCollection) => void
 	moduleSize?: number
-	gap?: number
 	scale?: number
-
-	layoutWrapperClass?: string
 	placeholderDrag?: React.ReactElement
-}
-
-type TContainerDragDelta = {
-	key: string,
-	moduledX: number,
-	moduledY: number
 }
 
 type NestedComponent<T> = React.FunctionComponent<T> & {
