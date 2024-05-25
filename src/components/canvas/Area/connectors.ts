@@ -13,8 +13,7 @@ export function getRealConnectorPoints(
 	element: Element, 
 	offset: { x: number, y: number } = { x: 0, y: 0},
 	parent: Element, 
-	orientation: ChildConnectorOrientation = ChildConnectorOrientation.self,
-	scale: number = 1
+	orientation: ChildConnectorOrientation = ChildConnectorOrientation.self
 ) : [TRoundedCoords, ConnectorAttachmentType[] ] {
 	const elementRects = element.getBoundingClientRect()
 	const CCO = ChildConnectorOrientation
@@ -27,14 +26,14 @@ export function getRealConnectorPoints(
 	// console.log(result)
 	if(parent) {
 		const parentRects = parent.getBoundingClientRect()
-		result.top = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top / scale : elementRects.top / scale
-		result.y = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top / scale : elementRects.top / scale
-		result.bottom = (orientation == CCO.vertical || orientation ==  CCO.parent) ? parentRects.bottom / scale : elementRects.bottom / scale
-		result.left = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left / scale : elementRects.left / scale
-		result.x = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left / scale : elementRects.left / scale
-		result.right = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.right / scale : elementRects.right / scale
-		result.width = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.width / scale : elementRects.width / scale
-		result.height = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.width / scale : elementRects.height / scale
+		result.top = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top : elementRects.top
+		result.y = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.top : elementRects.top
+		result.bottom = (orientation == CCO.vertical || orientation ==  CCO.parent) ? parentRects.bottom : elementRects.bottom
+		result.left = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left : elementRects.left
+		result.x = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.left : elementRects.left
+		result.right = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.right : elementRects.right
+		result.width = (orientation == CCO.horizontal || orientation == CCO.parent) ? parentRects.width : elementRects.width
+		result.height = (orientation == CCO.vertical || orientation == CCO.parent) ? parentRects.width : elementRects.height
 	}
 
 	let availableConnectorPoints = []
@@ -53,8 +52,12 @@ export function getRealConnectorPoints(
 }
 
 
-export function createConnectors(connectors: TConnectorPathList, canvasElem: Element, containerCoordinatesCollection: IContainerDescriptorCollection, scale: number = 1) {
+export function createConnectors(
+	connectors: TConnectorPathList, 
+	canvasElem: Element
+) {
 	let definedConnectors : TConnectorDescriptorList = []
+	const canvasRect = canvasElem.getBoundingClientRect()
 	const AT = ConnectorAttachmentType
 	
 	each(connectors, (connector) => {
@@ -77,8 +80,8 @@ export function createConnectors(connectors: TConnectorPathList, canvasElem: Ele
 			const endElemHasParent = endElem.closest(`[data-canvas-container]`) != endElem && endElem.closest(`[data-canvas-container]`)
 			// const endElemParent = endElemHasParent ? containerCoordinatesCollection[endElemHasParent.getAttribute('data-canvas-key')] : null
 
-			const [startContainer, startAttachment] = getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self, scale)
-			const [endContainer, endAttachment] = getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self, scale)
+			const [startContainer, startAttachment] = getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
+			const [endContainer, endAttachment] = getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
 
 			// console.log('Coords', startContainer, endContainer)
 			// console.log('attachment', startElemHasParent, startAttachment, endElemHasParent, endAttachment)
@@ -117,8 +120,8 @@ export function createConnectors(connectors: TConnectorPathList, canvasElem: Ele
 			definedConnectors.push({
 				from: connector.from,
 				to: connector.to,
-				top,
-				left,
+				top: top,
+				left: left,
 				w,
 				h,
 				start: {

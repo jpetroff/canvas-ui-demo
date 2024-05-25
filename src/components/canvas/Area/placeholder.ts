@@ -34,18 +34,19 @@ export function updateDragPlaceholder(
 	dX: number, dY: number,
 	element: Element,
 	dragPlaceholder: Element,
-	area: TAreaContext
+	canvas: Element
 ) {
 	if(!element) return
 
-	const containerCoordinates = element.getBoundingClientRect()
+	const containerRect = element.getBoundingClientRect()
+	const canvasRect = canvas.getBoundingClientRect()
 
 	dragPlaceholder.setAttribute && dragPlaceholder.setAttribute('style', 
 		prepareDragPlaceholderCSS({
-			left: containerCoordinates.left - area.left  + dX,
-			top: containerCoordinates.top - area.top + dY,
-			width: containerCoordinates.width,
-			height: containerCoordinates.height,
+			left: containerRect.left - canvasRect.left  + dX,
+			top: containerRect.top - canvasRect.top + dY,
+			width: containerRect.width,
+			height: containerRect.height,
 		})
 	)
 }
