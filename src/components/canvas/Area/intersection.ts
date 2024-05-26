@@ -32,9 +32,9 @@ export function checkIntersection(
 			const key = container.getAttribute('data-key')
 			
 			let features = []
-			if(container.getAttribute('data-canvas-container')) features.push(IntersectionObjectType.container)
-			if(container.getAttribute('data-canvas-zone')) features.push(IntersectionObjectType.definedZone)
-			if(container.getAttribute('data-canvas-section')) features.push(IntersectionObjectType.namedSection)
+			if(container.hasAttribute('data-canvas-container')) features.push(IntersectionObjectType.container)
+			if(container.hasAttribute('data-canvas-zone')) features.push(IntersectionObjectType.definedZone)
+			if(container.hasAttribute('data-canvas-section')) features.push(IntersectionObjectType.namedSection)
 
 			if(containerDescriptorCollection[key] && containerDescriptorCollection[key].sticky) 
 				features.push(IntersectionObjectType.stickyContainer)

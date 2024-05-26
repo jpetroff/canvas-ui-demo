@@ -1,7 +1,7 @@
 /* 
 	Renders as child — see https://medium.com/@bryanmylee/aschild-in-react-svelte-vue-and-solid-for-render-delegation-645c73650ced
  */
-
+import './style.css'
 import * as React from 'react'
 import { useDidMount } from '../libs/custom-hooks'
 import { merge, isFunction } from 'lodash'
@@ -43,37 +43,37 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 			if(containerProps.onMount && isFunction(containerProps.onMount)) 
 				containerProps.onMount()
 		})
+
+		const selfKey = props.canvasKey
+		const dragKey = globalContext.area.dragObjectKey
 	
-		containerProps.className = `${containerProps.className || ''} inline-block ${extra || absolute ? 'absolute' : 'relative'} cursor-grab [&_*]:cursor-auto`
-		const compositionProps = mergeReactProps(containerProps, children.props)
+		const lockClass = dragKey ? 'canvas-container-lock' : ''
+		const dragOverClass = (!sticky && dragKey && dragKey != selfKey && globalContext.descriptors[dragKey]?.sticky) ? 'canvas-container-drag-over' : ''
+		containerProps.className = `${containerProps.className || ''} inline-block ${extra || absolute ? 'absolute' : 'relative'} cursor-grab ${lockClass} ${dragOverClass}`
 	
 		const currentContext = globalContext.descriptors[props.canvasKey]
-
-		// console.log(`Prerender context`,canvasKey,currentContext)
 	
-		const fullProps = merge({
+		const extendProps = {
+			ref: ref,
 			style: {
 				top: currentContext?.relative.top ? currentContext.relative.top+'px' : null,
 				left: currentContext?.relative.left ? currentContext.relative.left+'px' : null
 			},
 			key: canvasKey,
 			['data-key']: canvasKey,
-			['data-canvas-container']: true,
-			['data-canvas-absolute']: extra || absolute || currentContext?.extra,
+			['data-canvas-container']: '',
+			['data-canvas-absolute']: (extra || absolute || currentContext?.extra || currentContext?.absolute) ? '' : undefined,
 			['data-canvas-stick-to']: currentContext?.stickTo || stickTo || undefined,
-			['data-canvas-sticky']: !!sticky || currentContext?.sticky || undefined,
-		}, compositionProps)
-	
-		const childrenProps = {
-			...fullProps,
-			ref: ref
+			['data-canvas-sticky']: (sticky || currentContext?.sticky) ? '' : undefined,
 		}
+
+		const compositionProps = mergeReactProps(containerProps, children.props, extendProps)
 	
-		return React.cloneElement(children, childrenProps as any)
+		return React.cloneElement(children, compositionProps as any)
 	} catch(err) {
 		console.error(err)
 	}
-});
+})
 
 Container.displayName = 'Canvas.Container'
 

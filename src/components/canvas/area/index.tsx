@@ -1,3 +1,5 @@
+import './style.css'
+
 import * as React from 'react'
 
 import { useDidMount, useForkRef, useResizeObserver } from '../libs/custom-hooks'
@@ -23,6 +25,7 @@ export type TAreaContext = {
 	width?: number
 	scale: number
 	dragObjectKey?: string | null
+	addMode?: boolean
 	padding: {
 		top: number,
 		left: number,
@@ -51,6 +54,7 @@ export interface IAreaProps extends React.HTMLProps<HTMLDivElement> {
 	showGrid?: boolean
 	onMount?: () => void
 	onLayoutChange?: (newLayout: IContainerDescriptorCollection) => void
+	onPlaceAdd?: (coords: TContainerDescriptor) => void
 }
 
 const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
@@ -125,9 +129,10 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 
 
 	function handleDragStart(event: MouseTargetEvent<HTMLElement>) {
+		console.log(event.target.getAttribute('data-key'), event.target.hasAttribute('data-canvas-container'))
 		if(
 			event.target.getAttribute &&
-			event.target.getAttribute('data-canvas-container') == 'true'
+			event.target.hasAttribute('data-canvas-container')
 		) {
 			setDragObjectKey(event.target.getAttribute('data-key'))
 			setMouseDragCoords({
@@ -229,19 +234,71 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		setConnectorElements(newConnectors)
 	}, [globalContext] )
 
-	const showGridClass = props.moduleSize > 4 && props.showGrid ? 'bg-canvas-ui-grid' : ''
+	function handleClick (event: MouseTargetEvent<HTMLElement>) {
+		const canvasRect = selfRef.current.getBoundingClientRect()
+		const X = event.clientX - canvasRect.left
+		const Y = event.clientY - canvasRect.top
+		const scale = globalContext.area.scale
+
+		console.log(`Click`, X, Y)
+
+		const currentContainers = measureContainers(selfRef.current, globalContext.descriptors, globalContext.area)
+
+		const hitIntersections = checkIntersection(
+			selfRef.current,
+			event.clientX, event.clientY,
+			currentContainers
+		)
+
+		const intersection = find(hitIntersections, (hit) => indexOf(hit.features, IntersectionObjectType.container) != -1 )
+		const boundObjectKey = intersection ? intersection.key : null
+
+		console.log('Bound to', boundObjectKey)
+
+		const parent = 	boundObjectKey ? 
+										{
+											parent: {
+												left: currentContainers[boundObjectKey].offset.left,
+												top: currentContainers[boundObjectKey].offset.top,
+												width: currentContainers[boundObjectKey].width,
+												height: currentContainers[boundObjectKey].height
+											},
+											stickTo: boundObjectKey
+										} :
+										{}
+
+		if(props.onPlaceAdd && isFunction(props.onPlaceAdd)) {
+			props.onPlaceAdd({
+				relative: {
+					left: upscale(X, scale),
+					top: upscale(Y, scale)
+				},
+				width: 0,
+				height: 0,
+				...parent
+			})
+		}
+	}
+
+	const showGridClass =	props.moduleSize > 4 && props.showGrid 
+												? 'bg-canvas-ui-grid' : ''
 
 	const dragUserSelectClass = globalContext.area.dragObjectKey != null ? 
 															'select-none cursor-grabbing ' : 
 															'select-auto cursor-auto'
 
+	const addModeClass = 	globalContext.area.addMode ? 
+												'canvas-container-add-mode' :
+												''
+
 	console.log(`area debug`, globalContext.area)
 	return <div ref={multiRef}
-		className={`${props.className || ''} ${dragUserSelectClass} ${showGridClass} relative min-w-full min-h-full`}
+		className={`${props.className || ''} ${dragUserSelectClass} ${showGridClass} ${addModeClass} relative min-w-full min-h-full`}
 		onMouseDown={handleDragStart}
 		onMouseMove={handleDragMove}
 		onMouseUp={handleDragEnd}
 		onMouseLeave={handleDragEnd}
+		onClick={ globalContext.area.addMode ? handleClick : undefined }
 	>
 		<div data-canvas-content style={
 			{

@@ -18,15 +18,19 @@ export function measureContainers(
 			const styles = getElementCSS(container)
 			const key = container.getAttribute(`data-key`)
 			if(!key) return
+
+			console.log(`Measure extra:`, key, descriptors[key]?.extra, container.hasAttribute(`data-canvas-extra`), descriptors[key]?.extra || !!container.hasAttribute(`data-canvas-extra`))
+			console.log(`Measure absolute:`, key, descriptors[key]?.absolute, container.hasAttribute(`data-canvas-absolute`), descriptors[key]?.absolute || !!container.hasAttribute(`data-canvas-absolute`))
+			console.log(`Measure sticky:`, key, descriptors[key]?.sticky, container.hasAttribute(`data-canvas-sticky`), descriptors[key]?.sticky || !!container.hasAttribute(`data-canvas-sticky`))
 	
 			return {
 				relative: {
 					left: _r(getCSSProperty('left', styles)) || 0,
 					top: _r(getCSSProperty('top', styles)) || 0,
 				},
-				extra: descriptors[key]?.extra || !!container.getAttribute(`[data-canvas-extra]`) || false,
-				absolute: descriptors[key]?.absolute || !!container.getAttribute(`[data-canvas-extra]`) || false,
-				sticky: descriptors[key]?.sticky || !container.getAttribute(`[data-canvas-sticky]`) || false,
+				extra: descriptors[key]?.extra || container.hasAttribute(`data-canvas-extra`) || false,
+				absolute: descriptors[key]?.absolute || container.hasAttribute(`data-canvas-absolute`) || false,
+				sticky: descriptors[key]?.sticky || container.hasAttribute(`data-canvas-sticky`) || false,
 				stickTo: descriptors[key]?.stickTo || null,
 				offset: {
 					left: _r(rect.left - canvasRect.left),
@@ -46,23 +50,6 @@ export function measureContainers(
 
 	const containerDescriptorCollection : TContainerMeasureDict = keyBy<TContainerMeasure>(containerDescriptorArray, 'key')
 
-	// console.log(containerDescriptorCollection)
-	// const result = transform(
-	// 	containerDescriptorCollection, 
-	// 	(result, container, key) => {
-	// 		if(container.stickTo || containerDescriptorCollection[container.stickTo]) {
-	// 			result[key].parent = {
-	// 				left: containerDescriptorCollection[container.stickTo].offset.left,
-	// 				top: containerDescriptorCollection[container.stickTo].offset.top,
-	// 				width: containerDescriptorCollection[container.stickTo].width,
-	// 				height: containerDescriptorCollection[container.stickTo].height
-	// 			}
-	// 		}
-	// 		return result
-	// 	},
-	// 	{}
-	// )
-
 	return containerDescriptorCollection
 }
 
@@ -80,9 +67,3 @@ function getCSSProperty(property: string, elementStyleMap: CSSStyleDeclaration):
 
 	return undefined
 }
-
-// export function measureSelf(
-// 	element: Element[]
-// ) {
-
-// }

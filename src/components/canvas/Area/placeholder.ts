@@ -23,7 +23,8 @@ function prepareDragPlaceholderCSS(styleProps: TRect) {
 			`height: ${styleProps.height || 24}px`,
 			'z-index: 999999',
 			'position: absolute',
-			'display: block'
+			'display: block',
+			'pointer-events: none'
 		].join('; ')
 	} catch (err) {
 		return ''

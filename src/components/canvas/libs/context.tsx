@@ -12,17 +12,19 @@ export type TCanvasContextState = {
 }
 
 interface ICanvasContextProviderProps {
-	value: TCanvasContextState,
+	descriptors: IContainerDescriptorCollection
+	connectors: TConnectorPathList
+	area: TAreaContext
 	children?: React.ReactNode | React.ReactNode[]
 }
 
 const CanvasContextProvider: React.FunctionComponent<ICanvasContextProviderProps> = (props) => {
-	const [_globalState, updateState] = React.useReducer(updateGlobalState, props.value)
+	const [_globalState, updateState] = React.useReducer(updateGlobalState, {area: props.area, descriptors: props.descriptors, connectors: props.connectors})
 
 	const globalState = {
-		area: _globalState.area,
-		connectors: props.value.connectors,
-		descriptors: props.value.descriptors
+		area: extend({}, _globalState.area, {scale: props.area.scale, addMode: props.area.addMode}),
+		connectors: props.connectors,
+		descriptors: props.descriptors
 	}
 
 

@@ -1,4 +1,4 @@
-import { extend, isEqual, transform } from "lodash"
+import { extend, transform } from "lodash"
 import type { TAreaContext } from "."
 import { upscale } from "../libs/utils"
 
@@ -25,8 +25,8 @@ export function recalc(
 
 			if(container.absolute || container.extra) {
 				result[key].relative = {
-					left: upscale(container.offset.left, scale),
-					top: upscale(container.offset.top, scale)
+					left: container.relative.left,
+					top: container.relative.top
 				}
 			} else {
 				// relative CSS value doesn't require upscale

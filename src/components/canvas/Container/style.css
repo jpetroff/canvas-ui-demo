@@ -1,0 +1,20 @@
+.canvas-container-lock:after {
+	content: ' ';
+	z-index: 9999999;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(255,255,255,0.2);
+	cursor: inherit;
+	pointer-events: all;
+}
+
+.canvas-container-lock {
+	cursor: inherit;
+}
+
+.canvas-container-drag-over:hover {
+	box-shadow:0 0 0 2px rgba(249, 249, 251, 1), 0 0 0 4px #cbd5e1;
+}

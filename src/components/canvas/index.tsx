@@ -24,6 +24,8 @@ interface ICanvasProps extends React.HTMLProps<HTMLElement> {
 	moduleSize?: number
 	scale?: number
 	placeholderDrag?: React.ReactElement
+	addMode?: boolean
+	onPlaceAdd?: (coords: TContainerDescriptor) => void
 }
 
 type NestedComponent<T> = React.FunctionComponent<T> & {
@@ -49,12 +51,10 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	const areaScale = (props.scale >= 0.5 && props.scale <= 1) ? props.scale : 1
 
 	return (
-	<CanvasContextProvider value={
-		{
-			descriptors: props.containerCoordinates,
-			connectors: props.connectors,
-			area: {
-				dragObjectKey: null,
+	<CanvasContextProvider 
+		area={
+			{	dragObjectKey: null,
+				addMode: props.addMode,
 				scale: areaScale,
 				padding: {
 					top: 0,
@@ -64,7 +64,9 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 				}
 			}
 		}
-	} >
+		descriptors={props.containerCoordinates}
+		connectors={props.connectors}
+	>
 		<div className={`${props.className || ''} w-full h-full overflow-hidden transform-gpu`}>
 		{props.moduleSize > 4 && <style>{`:root { --canvas-ui-module-size: ${props.moduleSize}px } `}</style> }
 			<Scroller className="w-full h-full overflow-auto">
@@ -72,6 +74,7 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 					moduleSize={props.moduleSize}
 					ref={canvasRef}
 					onLayoutChange={props.onLayoutChange}
+					onPlaceAdd={props.onPlaceAdd}
 				>
 
 					{props.children}
