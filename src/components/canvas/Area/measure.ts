@@ -53,12 +53,12 @@ export function measureContainers(
 	return containerDescriptorCollection
 }
 
-function getElementCSS(element: Element) : CSSStyleDeclaration {
+export function getElementCSS(element: Element) : CSSStyleDeclaration {
 	return window.getComputedStyle(element)
 }
 
 
-function getCSSProperty(property: string, elementStyleMap: CSSStyleDeclaration): number | undefined {
+export function getCSSProperty(property: string, elementStyleMap: CSSStyleDeclaration): number | undefined {
 	const currentProp = elementStyleMap.getPropertyValue(property)
 
 	if(currentProp && currentProp != 'auto') {

@@ -8,7 +8,7 @@ import Canvas from '@components/canvas'
 // import type { TContainerCoordCollection, TConnectorDescription, TConnectorDescriptionList } from '@components/canvas/types'
 import TestForm from '@apps/test-form'
 
-import { Card, Text, Box, Button, IconButton } from '@radix-ui/themes'
+import { Card, Text, Box, Button, IconButton, ScrollArea } from '@radix-ui/themes'
 import CommentBubble from '@components/comment-bubble'
 import { extend, filter } from 'lodash'
 
@@ -114,6 +114,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
 			className="bg-slate2"
 			addMode={!!addMode} onPlaceAdd={(coords) => handleContainerAdd(addMode, coords)}
+			scroll={<Canvas.Scroller />}
 		>
 			<Canvas.Layout className='grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start'>
 				{filter(containers, (container) => container.props.extra != true)}

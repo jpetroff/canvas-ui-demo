@@ -2,8 +2,6 @@ import './style.css'
 
 import * as React from 'react'
 
-import Scroller from '@components/scroller'
-
 import CanvasContextProvider from './libs/context'
 
 import type { TCanvasContainerElement } from './Container'
@@ -12,6 +10,7 @@ import Container from './Container'
 import Area from './Area'
 import Placeholder from './Placeholder'
 import Section from './Section'
+import Scroller from './Scroller'
 
 import Layout from './Layout'
 import Extras from './Extras'
@@ -23,7 +22,8 @@ interface ICanvasProps extends React.HTMLProps<HTMLElement> {
 	onLayoutChange: (newLayout: IContainerDescriptorCollection) => void
 	moduleSize?: number
 	scale?: number
-	placeholderDrag?: React.ReactElement
+	dragPlaceholder?: React.ReactElement
+	scroll?: React.ReactElement
 	addMode?: boolean
 	onPlaceAdd?: (coords: TContainerDescriptor) => void
 }
@@ -34,6 +34,7 @@ type NestedComponent<T> = React.FunctionComponent<T> & {
 	Layout: typeof Layout
 	Extras: typeof Extras
 	Placeholder: typeof Placeholder
+	Scroller: typeof Scroller
 }
 
 const Canvas: NestedComponent<ICanvasProps> = (_props) => {
@@ -69,18 +70,22 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 	>
 		<div className={`${props.className || ''} w-full h-full overflow-hidden transform-gpu`}>
 		{props.moduleSize > 4 && <style>{`:root { --canvas-ui-module-size: ${props.moduleSize}px } `}</style> }
-			<Scroller className="w-full h-full overflow-auto">
-				<Area 
-					moduleSize={props.moduleSize}
-					ref={canvasRef}
-					onLayoutChange={props.onLayoutChange}
-					onPlaceAdd={props.onPlaceAdd}
-				>
+			{
+				React.cloneElement(
+					props.scroll || <Scroller />,
+					{ ...props.scroll.props, className: 'w-full h-full'},
+					<Area 
+						moduleSize={props.moduleSize}
+						ref={canvasRef}
+						onLayoutChange={props.onLayoutChange}
+						onPlaceAdd={props.onPlaceAdd}
+					>
 
-					{props.children}
-					
-				</Area>
-			</Scroller>
+						{props.children}
+						
+					</Area>
+				)
+			}
 		</div>
 	</CanvasContextProvider>
 	)
@@ -91,6 +96,7 @@ Canvas.Section = Section
 Canvas.Layout = Layout
 Canvas.Extras = Extras
 Canvas.Placeholder = Placeholder
+Canvas.Scroller = Scroller
 
 Canvas.displayName = 'Canvas'
 

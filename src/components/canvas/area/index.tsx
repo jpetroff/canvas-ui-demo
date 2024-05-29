@@ -13,6 +13,7 @@ import { checkIntersection, IntersectionObjectType } from './intersection'
 import { measureContainers } from './measure'
 import { createConnectors } from './connectors'
 import { recalc } from './recalc'
+import { calcBoundingDimensions, getExtraPaddings, resizeCanvas, setCanvasSize } from './resize'
 
 export interface MouseTargetEvent<T extends HTMLElement = HTMLElement> extends React.MouseEvent<T, Omit<MouseEvent, 'target'>> { 
 	target: EventTarget & Partial<T> 
@@ -88,21 +89,10 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		console.log('------------------- from mount ----------------')
 		console.log(globalContext, updateContext, selfRef)
 		const areaRects = selfRef.current.getBoundingClientRect()
-		updateContext({
-			type: ContextEventType.resize,
-			value: {
-				top: areaRects.top,
-				left: areaRects.left,
-				width: areaRects.width,
-				height: areaRects.height,
-				dragObjectKey: null,
-			}
-		})
-		if(props.onMount && isFunction(props.onMount)) props.onMount()
-	})
-
-	useResizeObserver(selfRef, () => {
-		const areaRects = selfRef.current.getBoundingClientRect()
+		const dimensions = calcBoundingDimensions(selfRef.current, measureContainers(selfRef.current, globalContext.descriptors, globalContext.area))
+		const paddings = getExtraPaddings(selfRef.current, dimensions)
+		resizeCanvas(selfRef.current, paddings)
+		console.log(`Mount paddings:`, paddings, dimensions)
 		updateContext({
 			type: ContextEventType.resize,
 			value: {
@@ -113,6 +103,24 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 				dragObjectKey: null
 			}
 		})
+		if(props.onMount && isFunction(props.onMount)) props.onMount()
+	})
+
+	useResizeObserver(selfRef, () => {
+		// const areaRects = selfRef.current.getBoundingClientRect()
+		// const dimensions = calcBoundingDimensions(selfRef.current, measureContainers(selfRef.current, globalContext.descriptors, globalContext.area))
+		// const paddings = resizeCanvas(selfRef.current, dimensions)
+		// updateContext({
+		// 	type: ContextEventType.resize,
+		// 	value: {
+		// 		top: areaRects.top,
+		// 		left: areaRects.left,
+		// 		width: areaRects.width,
+		// 		height: areaRects.height,
+		// 		dragObjectKey: null,
+		// 		padding: paddings
+		// 	}
+		// })
 	})
 
 	function updateContainerCoordinates(newContainerDescriptorCollection: TContainerMeasureDict) {
@@ -146,9 +154,13 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		if(
 			globalContext.area.dragObjectKey != null
 		) {
+				const canvas = selfRef.current
+				setCanvasSize(canvas, {top: 0, left: 0, right: 9999, bottom: 9999})
 				const dragContainer = document.getElementById(`${placeholderId}`)
 				const element = selfRef.current.querySelector(`[data-key="${globalContext.area.dragObjectKey}"]`)
 				const [dX, dY] = stepCoordinates(event.clientX - mouseDragCoords.X, event.clientY - mouseDragCoords.Y, props.moduleSize, globalContext.area.scale)
+				if(dX == 0 || dY == 0) return
+
 				updateDragPlaceholder(
 					dX * globalContext.area.scale, 
 					dY * globalContext.area.scale,
@@ -156,6 +168,21 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 					dragContainer,
 					selfRef.current
 				)
+				const dragContainerRect = dragContainer.getBoundingClientRect()
+				const canvasRect = canvas.getBoundingClientRect()
+				const bottomOut = (canvasRect.bottom - (9999 - canvasRect.top)) - dragContainerRect.bottom
+				// if(bottomOut < -12) {
+				// 	const scroller = canvas.closest(`[data-canvas-scroller]`)
+				// 	scroller.scrollBy(0, 1)
+				// 	updateDragPlaceholder(
+				// 		dX * globalContext.area.scale, 
+				// 		dY * globalContext.area.scale + 1,
+				// 		element,
+				// 		dragContainer,
+				// 		selfRef.current
+				// 	)
+				// 	// handleDragMove(event)
+				// }
 			}
 	}
 
@@ -164,6 +191,8 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 			globalContext.area.dragObjectKey != null
 		) {
 			const [dX, dY] = stepCoordinates(event.clientX - mouseDragCoords.X, event.clientY - mouseDragCoords.Y, props.moduleSize)
+
+			if(dX == 0 || dY == 0) hideDragContainer(document.getElementById(`${placeholderId}`))
 
 			const dragObjectKey = globalContext.area.dragObjectKey
 
@@ -207,8 +236,13 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 			}
 
 			updateContainerCoordinates(newContainerCoordinates)
-			hideDragContainer(document.getElementById(`${placeholderId}`))
+			const dimensions = calcBoundingDimensions(selfRef.current, measureContainers(selfRef.current, globalContext.descriptors, globalContext.area), document.getElementById(`${placeholderId}`))
+			const paddings = getExtraPaddings(selfRef.current, dimensions)
+			console.log(`Drag paddings:`, paddings, dimensions)
+			resizeCanvas(selfRef.current, paddings)
 			setDragObjectKey(null)
+
+			hideDragContainer(document.getElementById(`${placeholderId}`))
 		}
 	}
 
@@ -293,12 +327,20 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 
 	console.log(`area debug`, globalContext.area)
 	return <div ref={multiRef}
-		className={`${props.className || ''} ${dragUserSelectClass} ${showGridClass} ${addModeClass} relative min-w-full min-h-full`}
+		className={`${props.className || ''} ${dragUserSelectClass} ${showGridClass} ${addModeClass} relative min-w-full min-h-full box-content`}
 		onMouseDown={handleDragStart}
 		onMouseMove={handleDragMove}
 		onMouseUp={handleDragEnd}
 		onMouseLeave={handleDragEnd}
 		onClick={ globalContext.area.addMode ? handleClick : undefined }
+		// style={
+		// 	// {
+		// 	// 	paddingTop: globalContext.area.padding?.top || 0,
+		// 	// 	paddingLeft: globalContext.area.padding?.left || 0,
+		// 	// 	paddingBottom: globalContext.area.padding?.bottom || 0,
+		// 	// 	paddingRight: globalContext.area.padding?.right || 0,
+		// 	// }
+		// }
 	>
 		<div data-canvas-content style={
 			{
