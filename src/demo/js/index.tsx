@@ -19,13 +19,11 @@ async function main() {
 
 	const root = createRoot(document.getElementById('react-app'))
 	root.render(
-		// <React.StrictMode>
-		<Theme grayColor='slate' appearance='light' accentColor='violet'>
+		<Theme grayColor='slate' appearance='dark' accentColor='violet'>
 			<AppContextProvider initValue={appContext}>
 				<RouterProvider router={router} />
 			</AppContextProvider>
 		</Theme>
-		// </React.StrictMode>
 	)
 }
 

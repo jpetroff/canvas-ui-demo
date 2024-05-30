@@ -8,7 +8,7 @@ import Canvas, { swapContainerCoordinates} from '@components/canvas'
 // import type { TContainerCoordCollection, TConnectorDescription, TConnectorDescriptionList } from '@components/canvas/types'
 import TestForm from '@apps/test-form'
 
-import { Card, Text, Box, Button, IconButton, ScrollArea } from '@radix-ui/themes'
+import { Card, Text, Box, Button, IconButton, ScrollArea, Separator } from '@radix-ui/themes'
 import CommentBubble from '@components/comment-bubble'
 import { extend, filter, findIndex, map } from 'lodash'
 
@@ -119,35 +119,38 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	}
 
 	
-	return <div className="w-screen h-dvh bg-white grid grid-cols-[theme(spacing.64)_1fr] grid-rows-[theme(spacing.16)_1fr]">
-		<Header className="col-span-2 bg-white min-h-5 border-b border-b-slate-100" />
-		<Sidebar className="border-r-slate-100 bg-white border-r">
+	return <div className=" gradient-bg w-screen h-dvh grid grid-cols-[theme(spacing.72)_1fr] grid-rows-[theme(spacing.16)_1fr]">
+		<Header className="col-span-2" />
+		<Sidebar className="">
 			<Button onClick={() => handleContainerAdd('form')}>Create new container</Button>
 		</Sidebar>
-		<Canvas
-			scale={scale}
-			containerCoordinates={containerCoordinates}
-			connectors={connectors}
-			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
-			onOrderChange={(event) => { handleContainerSwap(event) } }
-			className="bg-slate2"
-			addMode={!!addMode} onPlaceAdd={(coords) => handleContainerAdd(addMode, coords)}
-			scroll={<Canvas.Scroller />}
-		>
-			<Canvas.Layout className='grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start'>
-				{filter(containers, (container) => container.props.extra != true)}
-			</Canvas.Layout>
-			<Canvas.Extras>
-				{filter(containers, (container) => container.props.extra == true)}
-			</Canvas.Extras>
-		</Canvas>
-		<Toolbar className='px-3 py-2 rounded bg-white absolute bottom-8 right-8 border border-slate-200 shadow-sm flex flex-row gap-2.5'>
+		<div className="p-2 w-full h-full overflow-hidden">
+			<Canvas
+				scale={scale}
+				containerCoordinates={containerCoordinates}
+				connectors={connectors}
+				onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
+				onOrderChange={(event) => { handleContainerSwap(event) } }
+				className="bg-transparent rounded-lg border-2 border-opacity-40 border-slatedark-8"
+				addMode={!!addMode} onPlaceAdd={(coords) => handleContainerAdd(addMode, coords)}
+				scroll={<Canvas.Scroller />}
+			>
+				<Canvas.Layout className='grid w-2/3 m-auto grid-cols-2 grid-flow-row gap-4 p-4 items-start'>
+					{filter(containers, (container) => container.props.extra != true)}
+				</Canvas.Layout>
+				<Canvas.Extras>
+					{filter(containers, (container) => container.props.extra == true)}
+				</Canvas.Extras>
+			</Canvas>
+		</div>
+		<Toolbar className='px-3 py-2 rounded bg-slatedark-6 backdrop-blur-lg bg-opacity-25 absolute bottom-8 right-8 border-2 border-opacity-40 border-slatedark-8 shadow-lg flex flex-row gap-2.5'>
 			<Scaler className='gap-2.5' 
 				currentScale={scale}
 				min={0.5} max={1} step={0.1}
 				onScaleChange={(newScale) => setScale(newScale)} 
 			/>
-			<div className='w-px bg-slate-200 ml-1 mr-1 self-start-end'></div>
+			{/* <div className='w-px bg-slate-200 ml-1 mr-1 self-start-end'></div> */}
+			<Separator orientation="vertical" />
 			{addMode != 'comment' &&
 				<IconButton size="1" color="gray" variant="ghost" onClick={() => setAddMode('comment')}>
 					<ChatBubbleIcon />

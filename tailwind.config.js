@@ -1,18 +1,12 @@
-const { slate, violet, blackA } = require('@radix-ui/colors');
+import tailwindcssRadixColors from "tailwindcss-radix-colors"
 
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx,html}"],
   theme: {
-    extend: {
-      colors: {
-        ...slate,
-        ...violet,
-        ...blackA
-      }
-    },
+    extend: {},
   },
   variants: {
     extend: {},
   },
-  plugins: [],
+  plugins: [tailwindcssRadixColors],
 }

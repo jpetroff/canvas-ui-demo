@@ -2,10 +2,18 @@
 @import "@radix-ui/themes/styles.css";
 
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; 
 
 @layer base {
 	body {
-		color: theme('colors.slate.800')
+		color: theme('colors.slatedark.11');
+		background-color: theme('colors.graydark.1');
+	}
+}
+
+@layer components {
+	.gradient-bg {
+		background-image: radial-gradient(ellipse at top, theme('colors.violetdark.1'), transparent),
+											radial-gradient(ellipse at bottom, theme('colors.violetdark.2'), transparent); 
 	}
 }

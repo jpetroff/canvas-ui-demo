@@ -1,0 +1,7 @@
+.menu-item-bg {
+	background-color: var(--slate-a2);
+}
+
+.menu-item-bg:hover {
+	background-color: var(--slate-a3);
+}
