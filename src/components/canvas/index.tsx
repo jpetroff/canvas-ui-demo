@@ -14,18 +14,35 @@ import Scroller from './Scroller'
 
 import Layout from './Layout'
 import Extras from './Extras'
+import { publicHelpers as recalcHelpers } from './Area/recalc'
+
+export enum CanvasOrderPositionType {
+	after = 'after',
+	before = 'before',
+	swap = 'swap' 
+}
+
+export type TCanvasOrderEvent =
+{
+	type: CanvasOrderPositionType
+	objectKey: string
+	placementKey: string
+	zoneKey?: string
+}
 
 
 interface ICanvasProps extends React.HTMLProps<HTMLElement> {
 	connectors: TConnectorPath[]
 	containerCoordinates: IContainerDescriptorCollection
-	onLayoutChange: (newLayout: IContainerDescriptorCollection) => void
 	moduleSize?: number
 	scale?: number
 	dragPlaceholder?: React.ReactElement
 	scroll?: React.ReactElement
 	addMode?: boolean
+
+	onLayoutChange: (newLayout: IContainerDescriptorCollection) => void
 	onPlaceAdd?: (coords: TContainerDescriptor) => void
+	onOrderChange?: (event: TCanvasOrderEvent) => void
 }
 
 type NestedComponent<T> = React.FunctionComponent<T> & {
@@ -79,6 +96,7 @@ const Canvas: NestedComponent<ICanvasProps> = (_props) => {
 						ref={canvasRef}
 						onLayoutChange={props.onLayoutChange}
 						onPlaceAdd={props.onPlaceAdd}
+						onOrderChange={props.onOrderChange}
 					>
 
 						{props.children}
@@ -100,4 +118,6 @@ Canvas.Scroller = Scroller
 
 Canvas.displayName = 'Canvas'
 
-export default Canvas;
+export default Canvas
+
+export const swapContainerCoordinates = recalcHelpers.swapContainerCoordinates

@@ -18,6 +18,8 @@ export interface ICanvasContainerProps extends React.HTMLProps<HTMLElement> {
 	absolute?: boolean
 	stickTo?: string
 	sticky?: boolean
+	swappable?: boolean
+	resizable?: boolean
 }
 
 const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, ref) => {
@@ -28,6 +30,8 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 		stickTo,
 		sticky,
 		absolute,
+		swappable,
+		resizable,
 		...containerProps
 	} = props
 
@@ -49,7 +53,8 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 	
 		const lockClass = dragKey ? 'canvas-container-lock' : ''
 		const dragOverClass = (!sticky && dragKey && dragKey != selfKey && globalContext.descriptors[dragKey]?.sticky) ? 'canvas-container-drag-over' : ''
-		containerProps.className = `${containerProps.className || ''} inline-block ${extra || absolute ? 'absolute' : 'relative'} cursor-grab ${lockClass} ${dragOverClass}`
+		const swapClass = (!sticky && dragKey && dragKey != selfKey && globalContext.descriptors[dragKey]?.swappable && swappable) ? 'canvas-container-swappable' : ''
+		containerProps.className = `${containerProps.className || ''} inline-block ${extra || absolute ? 'absolute' : 'relative'} cursor-grab ${lockClass} ${dragOverClass} ${swapClass}`
 	
 		const currentContext = globalContext.descriptors[props.canvasKey]
 	
@@ -62,9 +67,11 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 			key: canvasKey,
 			['data-key']: canvasKey,
 			['data-canvas-container']: '',
-			['data-canvas-absolute']: (extra || absolute || currentContext?.extra || currentContext?.absolute) ? '' : undefined,
-			['data-canvas-stick-to']: currentContext?.stickTo || stickTo || undefined,
-			['data-canvas-sticky']: (sticky || currentContext?.sticky) ? '' : undefined,
+			['data-canvas-absolute']: (extra || absolute || currentContext?.extra || currentContext?.absolute) ? '' : void 0,
+			['data-canvas-stick-to']: currentContext?.stickTo || stickTo || void 0,
+			['data-canvas-sticky']: (sticky || currentContext?.sticky) ? '' : void 0,
+			['data-canvas-swappable']: (swappable || currentContext?.swappable) ? '' : void 0,
+			['data-canvas-resizable']: (resizable || currentContext?.resizable) ? '' : void 0,
 		}
 
 		const compositionProps = mergeReactProps(containerProps, children.props, extendProps)

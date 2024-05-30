@@ -31,6 +31,8 @@ export function measureContainers(
 				extra: descriptors[key]?.extra || container.hasAttribute(`data-canvas-extra`) || false,
 				absolute: descriptors[key]?.absolute || container.hasAttribute(`data-canvas-absolute`) || false,
 				sticky: descriptors[key]?.sticky || container.hasAttribute(`data-canvas-sticky`) || false,
+				resizable: descriptors[key]?.resizable || container.hasAttribute(`data-canvas-resizable`) || false,
+				swappable: descriptors[key]?.swappable || container.hasAttribute(`data-canvas-swappable`) || false,
 				stickTo: descriptors[key]?.stickTo || null,
 				offset: {
 					left: _r(rect.left - canvasRect.left),

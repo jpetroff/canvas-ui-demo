@@ -18,3 +18,7 @@
 .canvas-container-drag-over:hover {
 	box-shadow:0 0 0 2px rgba(249, 249, 251, 1), 0 0 0 4px #cbd5e1;
 }
+
+.canvas-container-swappable:hover {
+	transform: scale(1.05);
+}

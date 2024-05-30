@@ -15,6 +15,8 @@ import { createConnectors } from './connectors'
 import { recalc } from './recalc'
 import { calcBoundingDimensions, getExtraPaddings, resizeCanvas, setCanvasSize } from './resize'
 
+import { CanvasOrderPositionType, type TCanvasOrderEvent } from '..'
+
 export interface MouseTargetEvent<T extends HTMLElement = HTMLElement> extends React.MouseEvent<T, Omit<MouseEvent, 'target'>> { 
 	target: EventTarget & Partial<T> 
 }
@@ -56,6 +58,7 @@ export interface IAreaProps extends React.HTMLProps<HTMLDivElement> {
 	onMount?: () => void
 	onLayoutChange?: (newLayout: IContainerDescriptorCollection) => void
 	onPlaceAdd?: (coords: TContainerDescriptor) => void
+	onOrderChange?: (event: TCanvasOrderEvent) => void
 }
 
 const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
@@ -232,6 +235,29 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 					newContainerCoordinates[dragObjectKey].stickTo = boundObjectKey
 				} else {
 					newContainerCoordinates[dragObjectKey].stickTo = null
+				}
+			} else if(newContainerCoordinates[dragObjectKey].swappable) {
+				const hitIntersections = checkIntersection(
+					selfRef.current,
+					event.clientX, event.clientY,
+					currentContainers
+				)
+				const intersection = find(hitIntersections, (hit) => indexOf(hit.features, IntersectionObjectType.container) != -1 )
+				const swapObjectKey = intersection ? intersection.key : null
+
+				const isSwappable = swapObjectKey && currentContainers[swapObjectKey].swappable
+
+				console.log(`Swap branch`, isSwappable, swapObjectKey, currentContainers[swapObjectKey])
+
+				if (isSwappable && dragObjectKey != swapObjectKey && props.onOrderChange && isFunction(props.onOrderChange)) {
+					props.onOrderChange({
+						type: CanvasOrderPositionType.swap,
+						objectKey: dragObjectKey,
+						placementKey: swapObjectKey
+					})
+					setDragObjectKey(null)
+					hideDragContainer(document.getElementById(`${placeholderId}`))
+					return
 				}
 			}
 

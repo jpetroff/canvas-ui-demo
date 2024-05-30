@@ -1,4 +1,4 @@
-import { extend, transform } from "lodash"
+import { cloneDeep, extend, transform } from "lodash"
 import type { TAreaContext } from "."
 import { upscale } from "../libs/utils"
 
@@ -19,6 +19,7 @@ export function recalc(
 				sticky: container.sticky,
 				stickTo: container.stickTo,
 				resizable: container.resizable,
+				swappable: container.swappable,
 				width: upscale(container.width, scale),
 				height: upscale(container.height, scale)
 			}
@@ -81,4 +82,30 @@ export function recalcContainerParent(
 	) {
 
 	}
+}
+
+export const publicHelpers = {
+
+	swapContainerCoordinates: function(
+		containers: IContainerDescriptorCollection, key1: string, key2: string
+	) : IContainerDescriptorCollection 
+	{
+		const result = cloneDeep(containers)
+
+		if(!containers[key1] || !containers[key2]) {
+			console.warn(`Containers not available:`, key1, key2)
+			return result
+		}
+
+		if (containers[key1].absolute != containers[key2].absolute) {
+			console.warn(`Cannot swap containers with different position type (absolute and relative):`, key1, key2)
+			return result
+		}
+
+		result[key1].relative = containers[key2].relative
+		result[key2].relative = containers[key1].relative
+
+		return result
+	}
+
 }

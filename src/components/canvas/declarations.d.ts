@@ -38,19 +38,21 @@ declare type TContainerDescriptorPropItem = {
 	sticky?: boolean
 	stickTo?: string
 	resizable?: boolean
+	swappable?: boolean
 	// relative values stored by client
 	relative?: {
-		left: number,
+		left: number
 		top: number
 	}
-	width: number,
-	height: number,
+	width: number
+	height: number
 	parent?: {
-		left: number,
-		top: number,
-		width: number,
+		left: number
+		top: number
+		width: number
 		height: number
 	}
+	[key: any]: any
 }
 
 declare type TContainerDescriptor = TContainerDescriptorPropItem

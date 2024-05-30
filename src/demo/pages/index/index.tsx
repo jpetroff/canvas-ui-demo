@@ -4,13 +4,13 @@ import { useLocation, useNavigate, useParams } from 'react-router'
 
 import Header from '@apps/header'
 import Sidebar from '@apps/sidebar'
-import Canvas from '@components/canvas'
+import Canvas, { swapContainerCoordinates} from '@components/canvas'
 // import type { TContainerCoordCollection, TConnectorDescription, TConnectorDescriptionList } from '@components/canvas/types'
 import TestForm from '@apps/test-form'
 
 import { Card, Text, Box, Button, IconButton, ScrollArea } from '@radix-ui/themes'
 import CommentBubble from '@components/comment-bubble'
-import { extend, filter } from 'lodash'
+import { extend, filter, findIndex, map } from 'lodash'
 
 import useLocalStorage from '../../js/utils'
 import Scaler from '@components/scale-control'
@@ -30,10 +30,10 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 
 
 	const [containers, setContainers] = React.useState([
-		<Canvas.Container canvasKey='entry-form' key='entry-form'>
+		<Canvas.Container swappable={true} canvasKey='entry-form'>
 			<TestForm className='p-4' />
 		</Canvas.Container>,
-		<Canvas.Container canvasKey='second-form' key='second-form'>
+		<Canvas.Container swappable={true} canvasKey='second-form'>
 			<Card className='p-4'>
 				<p>Test new</p>
 				<p className='dsada'>Second child 1</p>
@@ -43,13 +43,13 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 				</Canvas.Section>
 			</Card>
 		</Canvas.Container>,
-		<Canvas.Container canvasKey='entry-form-2' key='entry-form-2'>
+		<Canvas.Container swappable={true} canvasKey='entry-form-2'>
 			<TestForm className='p-4' />
 		</Canvas.Container>,
-		<Canvas.Container canvasKey='entry-form-3' key='entry-form-3'>
+		<Canvas.Container swappable={true} canvasKey='entry-form-3'>
 			<TestForm className='p-4' />
 		</Canvas.Container>,
-		<Canvas.Container canvasKey='entry-form-4' key='entry-form-4'>
+		<Canvas.Container swappable={true} canvasKey='entry-form-4'>
 			<TestForm className='p-4' />
 		</Canvas.Container>
 	])
@@ -101,6 +101,23 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 		}
 	}
 
+	function handleContainerSwap(event) {
+		const indexA = findIndex(containers, (container) => container.props.canvasKey == event.objectKey )
+		const indexB = findIndex(containers, (container) => container.props.canvasKey == event.placementKey )
+
+		// A[x] = A.splice(y, 1, A[x])[0];
+		const newContainers = Array.from(containers)
+		newContainers[indexA] = newContainers.splice(indexB, 1, containers[indexA])[0]
+
+		const newCoordinates = swapContainerCoordinates(containerCoordinates, event.objectKey, event.placementKey)
+
+		console.log(event.objectKey, indexA, `→`, event.placementKey, indexB)
+		console.log(containerCoordinates, `→`, newCoordinates)
+		console.log( map(containers, (i) => i.props.canvasKey), `→`, map(newContainers, (i) => i.props.canvasKey) )
+		setContainers(newContainers)
+		setContainerCoordinates(newCoordinates)
+	}
+
 	
 	return <div className="w-screen h-dvh bg-white grid grid-cols-[theme(spacing.64)_1fr] grid-rows-[theme(spacing.16)_1fr]">
 		<Header className="col-span-2 bg-white min-h-5 border-b border-b-slate-100" />
@@ -112,6 +129,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			containerCoordinates={containerCoordinates}
 			connectors={connectors}
 			onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
+			onOrderChange={(event) => { handleContainerSwap(event) } }
 			className="bg-slate2"
 			addMode={!!addMode} onPlaceAdd={(coords) => handleContainerAdd(addMode, coords)}
 			scroll={<Canvas.Scroller />}
