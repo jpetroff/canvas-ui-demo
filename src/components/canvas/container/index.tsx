@@ -75,6 +75,8 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 		}
 
 		const compositionProps = mergeReactProps(containerProps, children.props, extendProps)
+
+		console.log(compositionProps)
 	
 		return React.cloneElement(children, compositionProps as any)
 	} catch(err) {

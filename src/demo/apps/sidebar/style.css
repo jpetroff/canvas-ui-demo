@@ -1,7 +1,4 @@
-.menu-item-bg {
-	background-color: var(--slate-a2);
-}
-
-.menu-item-bg:hover {
-	background-color: var(--slate-a3);
+.selected-menu-item[data-active] {
+	background-image: radial-gradient(ellipse at top right, var(--accent-7) 0, var(--accent-a8) 100%);
+	cursor: default;
 }

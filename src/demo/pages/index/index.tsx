@@ -2,20 +2,15 @@ import * as React from 'react'
 import { RouteObject } from 'react-router-dom'
 import { useLocation, useNavigate, useParams } from 'react-router'
 
-import Header from '@apps/header'
-import Sidebar from '@apps/sidebar'
 import Canvas, { swapContainerCoordinates} from '@components/canvas'
-// import type { TContainerCoordCollection, TConnectorDescription, TConnectorDescriptionList } from '@components/canvas/types'
 import TestForm from '@apps/test-form'
 
-import { Card, Text, Box, Button, IconButton, ScrollArea, Separator } from '@radix-ui/themes'
+import { Card, Box } from '@radix-ui/themes'
 import CommentBubble from '@components/comment-bubble'
 import { extend, filter, findIndex, map } from 'lodash'
 
 import useLocalStorage from '../../js/utils'
-import Scaler from '@components/scale-control'
-import Toolbar from '@components/toolbar'
-import { ChatBubbleIcon, Cross1Icon, Pencil2Icon } from '@radix-ui/react-icons'
+import Toolbar from '@apps/toolbar'
 
 interface IAppProps {
 	router?: RouteObject
@@ -119,11 +114,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	}
 
 	
-	return <div className=" gradient-bg w-screen h-dvh grid grid-cols-[theme(spacing.72)_1fr] grid-rows-[theme(spacing.16)_1fr]">
-		<Header className="col-span-2" />
-		<Sidebar className="">
-			<Button onClick={() => handleContainerAdd('form')}>Create new container</Button>
-		</Sidebar>
+	return <>
 		<div className="p-2 w-full h-full overflow-hidden">
 			<Canvas
 				scale={scale}
@@ -131,7 +122,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 				connectors={connectors}
 				onLayoutChange={(newLayout) => { setContainerCoordinates(newLayout); storeDescriptors(newLayout) } }
 				onOrderChange={(event) => { handleContainerSwap(event) } }
-				className="bg-transparent rounded-lg border-2 border-opacity-40 border-slatedark-8"
+				className="bg-transparent rounded-lg border border-slatedark-6"
 				addMode={!!addMode} onPlaceAdd={(coords) => handleContainerAdd(addMode, coords)}
 				scroll={<Canvas.Scroller />}
 			>
@@ -143,36 +134,12 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 				</Canvas.Extras>
 			</Canvas>
 		</div>
-		<Toolbar className='px-3 py-2 rounded bg-slatedark-6 backdrop-blur-lg bg-opacity-25 absolute bottom-8 right-8 border-2 border-opacity-40 border-slatedark-8 shadow-lg flex flex-row gap-2.5'>
-			<Scaler className='gap-2.5' 
-				currentScale={scale}
-				min={0.5} max={1} step={0.1}
-				onScaleChange={(newScale) => setScale(newScale)} 
-			/>
-			{/* <div className='w-px bg-slate-200 ml-1 mr-1 self-start-end'></div> */}
-			<Separator orientation="vertical" />
-			{addMode != 'comment' &&
-				<IconButton size="1" color="gray" variant="ghost" onClick={() => setAddMode('comment')}>
-					<ChatBubbleIcon />
-				</IconButton>
-			}
-			{addMode == 'comment' && 
-				<IconButton size="1" color="gray" variant="ghost" onClick={() => setAddMode(null)}>
-					<Cross1Icon />
-				</IconButton>
-			}
-			{addMode != 'note' &&
-				<IconButton size="1" color="gray" variant="ghost" onClick={() => setAddMode('note')}>
-					<Pencil2Icon />
-				</IconButton>
-			}
-			{addMode == 'note' && 
-				<IconButton size="1" color="gray" variant="ghost" onClick={() => setAddMode(null)}>
-					<Cross1Icon />
-				</IconButton>
-			}
-		</Toolbar>
-	</div>
+		<Toolbar 
+			scale={scale} addMode={addMode} 
+			onScaleChange={(scale) => setScale(scale)} 
+			onAddMode={(type) => setAddMode(type)}
+		/>
+		</>
 };
 
 export default PIndex;
