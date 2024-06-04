@@ -4,7 +4,7 @@
 import './style.css'
 import * as React from 'react'
 import { useDidMount } from '../libs/custom-hooks'
-import { merge, isFunction } from 'lodash'
+import { merge, isFunction, cloneDeep } from 'lodash'
 import { mergeReactProps } from '../libs/merge-react-props'
 import { useCanvasContext, useCanvasDispatch } from '../libs/context'
 
@@ -37,6 +37,8 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 
 	try {
 		const globalContext = useCanvasContext()
+
+		console.log(`Container render:`, globalContext)
 	
 		if (!React.isValidElement(children)) {
 			return null;
@@ -56,13 +58,13 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 		const swapClass = (!sticky && dragKey && dragKey != selfKey && globalContext.descriptors[dragKey]?.swappable && swappable) ? 'canvas-container-swappable' : ''
 		containerProps.className = `${containerProps.className || ''} inline-block ${extra || absolute ? 'absolute' : 'relative'} cursor-grab ${lockClass} ${dragOverClass} ${swapClass}`
 	
-		const currentContext = globalContext.descriptors[props.canvasKey]
+		const currentContext = cloneDeep(globalContext.descriptors[props.canvasKey])
 	
 		const extendProps = {
 			ref: ref,
 			style: {
-				top: currentContext?.relative.top ? currentContext.relative.top+'px' : null,
-				left: currentContext?.relative.left ? currentContext.relative.left+'px' : null
+				top: currentContext?.relative?.top ? currentContext.relative.top+'px' : null,
+				left: currentContext?.relative?.left ? currentContext.relative.left+'px' : null
 			},
 			key: canvasKey,
 			['data-key']: canvasKey,
@@ -78,6 +80,7 @@ const Container = React.forwardRef<HTMLElement, ICanvasContainerProps>((props, r
 
 		console.log(compositionProps)
 	
+		console.log(`Container render:`, globalContext)
 		return React.cloneElement(children, compositionProps as any)
 	} catch(err) {
 		console.error(err)

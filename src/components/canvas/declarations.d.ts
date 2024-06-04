@@ -44,8 +44,8 @@ declare type TContainerDescriptorPropItem = {
 		left: number
 		top: number
 	}
-	width: number
-	height: number
+	width?: number
+	height?: number
 	parent?: {
 		left: number
 		top: number

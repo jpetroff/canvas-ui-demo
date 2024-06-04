@@ -7,7 +7,6 @@ export const formMappings = {
 		props: {
 			canvasKey: 'ai-intent-form',
 			value: '',
-			className: 'col-start-1'
 		}
 	},
 	'ai-choose-model': {
@@ -15,7 +14,6 @@ export const formMappings = {
 		props: {
 			canvasKey: 'ai-choose-model',
 			model: '',
-			className: 'col-start-1',
 			options: [
 				{label:'ChatGPT 4', value: 'gpt-4', meta: 'Cloud-based'},
 				{label:'ChatGPT 4o', value: 'gpt-40', meta: 'Cloud-based'},
@@ -26,7 +24,11 @@ export const formMappings = {
 				{label:'Mistral', value: 'mist', meta: 'Local'},
 				{label:'Mistral instruct', value: 'mist-instr', meta: 'Local'},
 				{label:'Phi3', value: 'p3', meta: 'Local'}
-			]
+			],
+			apiKey: '',
+			maxNewTokens: 2048,
+			contextWindow: 8096,
+			temp: 0.1
 		}
 	},
 	'ai-system-prompt': {
@@ -34,7 +36,6 @@ export const formMappings = {
 		props: {
 			canvasKey: 'ai-system-prompt',
 			value: '',
-			className: 'col-start-1'
 		}
 	},
 	'ai-prompt-template': {
@@ -43,7 +44,7 @@ export const formMappings = {
 			canvasKey: 'ai-prompt-template',
 			value: [`System: {{system}}`, `User: {{user}}`, `Answer: {{answer}}`].join(String.fromCharCode(13, 13)),
 			variables: ['system', 'context', 'user', 'answer'],
-			className: 'col-start-2 row-start-1'
+			hasContext: false
 		}
 	},
 	'ai-add-context': {
@@ -52,7 +53,6 @@ export const formMappings = {
 			canvasKey: 'ai-add-context',
 			value: 'url',
 			url: '',
-			className: 'col-start-1',
 			dataset: '',
 			datasetOptions: [
 				{label:'design library 52 books 2024-05-23', value: 'dlb52', meta: '52 documents'},
@@ -71,6 +71,12 @@ export const formMappings = {
 		props: {
 			canvasKey: 'ai-user-prompt',
 			value: ''
+		}
+	},
+	'ai-validator-placeholder': {
+		component: <></>,
+		props: {
+			canvasKey: 'ai-validator-placeholder'
 		}
 	}
 }

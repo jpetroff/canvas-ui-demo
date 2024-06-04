@@ -19,9 +19,9 @@ export function measureContainers(
 			const key = container.getAttribute(`data-key`)
 			if(!key) return
 
-			console.log(`Measure extra:`, key, descriptors[key]?.extra, container.hasAttribute(`data-canvas-extra`), descriptors[key]?.extra || !!container.hasAttribute(`data-canvas-extra`))
-			console.log(`Measure absolute:`, key, descriptors[key]?.absolute, container.hasAttribute(`data-canvas-absolute`), descriptors[key]?.absolute || !!container.hasAttribute(`data-canvas-absolute`))
-			console.log(`Measure sticky:`, key, descriptors[key]?.sticky, container.hasAttribute(`data-canvas-sticky`), descriptors[key]?.sticky || !!container.hasAttribute(`data-canvas-sticky`))
+			// console.log(`Measure extra:`, key, descriptors[key]?.extra, container.hasAttribute(`data-canvas-extra`), descriptors[key]?.extra || !!container.hasAttribute(`data-canvas-extra`))
+			// console.log(`Measure absolute:`, key, descriptors[key]?.absolute, container.hasAttribute(`data-canvas-absolute`), descriptors[key]?.absolute || !!container.hasAttribute(`data-canvas-absolute`))
+			// console.log(`Measure sticky:`, key, descriptors[key]?.sticky, container.hasAttribute(`data-canvas-sticky`), descriptors[key]?.sticky || !!container.hasAttribute(`data-canvas-sticky`))
 	
 			return {
 				relative: {

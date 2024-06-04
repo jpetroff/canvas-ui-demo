@@ -1,18 +1,21 @@
 import { cloneDeep, extend, transform } from "lodash"
 import type { TAreaContext } from "."
 import { upscale } from "../libs/utils"
+import { TCanvasContextState } from "../libs/context"
 
 
 export function recalc(
 	measuredContainers: TContainerMeasureDict,
-	area: TAreaContext
+	context: TCanvasContextState
 ) : IContainerDescriptorCollection {
 
-	const scale = area.scale
+	const scale = context.area.scale
+
+	console.log(`Context on recalc`, cloneDeep(context.descriptors))
 
 	return transform(
 		measuredContainers,
-		(result, container, key) => {
+		(result, container, key: string) => {
 			result[key] = {
 				extra: container.extra,
 				absolute: container.absolute,

@@ -1,4 +1,4 @@
-import { each, isArray, isObject, clone, extend, merge } from 'lodash'
+import { each, isArray, isObject, clone, extend, merge, cloneDeep } from 'lodash'
 import type { TAreaContext } from '../Area'
 import * as React from 'react'
 
@@ -27,6 +27,7 @@ const CanvasContextProvider: React.FunctionComponent<ICanvasContextProviderProps
 		descriptors: props.descriptors
 	}
 
+	console.log(`Context provider render`, cloneDeep(props.descriptors))
 
 	return (
 		<CanvasContext.Provider value={globalState}>
@@ -48,6 +49,7 @@ export function useCanvasDispatch() {
 }
 
 function updateGlobalState(state: TCanvasContextState, event: CanvasEvent) : TCanvasContextState {
+	console.log(`update context >>`, cloneDeep(state), event)
 	switch (event.type) {
 		case ContextEventType.replace : {
 			return handleReplace(state, event.value)

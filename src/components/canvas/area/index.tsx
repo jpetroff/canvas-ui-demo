@@ -3,7 +3,7 @@ import './style.css'
 import * as React from 'react'
 
 import { useDidMount, useForkRef, useResizeObserver } from '../libs/custom-hooks'
-import { isFunction, transform, pick, map, find, indexOf, isEqual } from 'lodash'
+import { isFunction, transform, map, find, indexOf, isEqual, extend, cloneDeep, merge } from 'lodash'
 import { useCanvasContext, ContextEventType, useCanvasDispatch } from '../libs/context'
 import Placeholder from '../Placeholder'
 import Connector from '../Connector'
@@ -106,6 +106,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 				dragObjectKey: null
 			}
 		})
+		console.log(`isGlobalContext mutated?`, globalContext)
 		if(props.onMount && isFunction(props.onMount)) props.onMount()
 	})
 
@@ -129,10 +130,15 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 	function updateContainerCoordinates(newContainerDescriptorCollection: TContainerMeasureDict) {
 		console.log('Update fired', newContainerDescriptorCollection)
 		console.log(`Measured containers`, newContainerDescriptorCollection)
+		console.log(`Context at update`, cloneDeep(globalContext))
 		if(props.onLayoutChange && isFunction(props.onLayoutChange)) {
-			const updatedProps = recalc(newContainerDescriptorCollection, globalContext.area)
+			const updatedProps = recalc(newContainerDescriptorCollection, cloneDeep(globalContext))
+			console.log(`Context after recalc`, cloneDeep(globalContext))
 			console.log(`Updated props for containers`, updatedProps)
-			props.onLayoutChange(updatedProps)
+			console.log(`Merged props`, cloneDeep(globalContext.descriptors), updatedProps, merge({}, globalContext.descriptors, updatedProps))
+			props.onLayoutChange( 
+				merge({}, globalContext.descriptors, updatedProps)
+			)
 		} else {
 			console.warn('Canvas onLayoutChange is not defined as function: cannot save layout changes')
 		}
@@ -141,6 +147,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 
 	function handleDragStart(event: MouseTargetEvent<HTMLElement>) {
 		console.log(event.target.getAttribute('data-key'), event.target.hasAttribute('data-canvas-container'))
+		console.log(`Context at drag start`, cloneDeep(globalContext.descriptors))
 		if(
 			event.target.getAttribute &&
 			event.target.hasAttribute('data-canvas-container')
@@ -150,6 +157,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 				X: event.clientX,
 				Y: event.clientY
 			})
+			console.log(`Context at drag start 2`, cloneDeep(globalContext.descriptors))
 		}
 	}
 
@@ -193,6 +201,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		if(
 			globalContext.area.dragObjectKey != null
 		) {
+			console.log(`Context at drag begin`, cloneDeep(globalContext.descriptors))
 			const [dX, dY] = stepCoordinates(event.clientX - mouseDragCoords.X, event.clientY - mouseDragCoords.Y, props.moduleSize)
 
 			if(dX == 0 || dY == 0) hideDragContainer(document.getElementById(`${placeholderId}`))
@@ -202,7 +211,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 			console.log(`------------------- from drag: ${dragObjectKey} ----------------`)
 
 			const currentContainers = measureContainers(selfRef.current, globalContext.descriptors, globalContext.area)
-			console.log(`Drag measured`, currentContainers)
+			console.log(`Drag measured`, cloneDeep(currentContainers))
 
 			const newContainerCoordinates = transform(
 				currentContainers, 
@@ -351,7 +360,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 												'canvas-container-add-mode' :
 												''
 
-	console.log(`area debug`, globalContext.area)
+	console.log(`area debug`, globalContext)
 	return <div ref={multiRef}
 		className={`${props.className || ''} ${dragUserSelectClass} ${showGridClass} ${addModeClass} relative min-w-full min-h-full box-content`}
 		onMouseDown={handleDragStart}

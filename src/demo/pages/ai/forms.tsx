@@ -1,7 +1,10 @@
-import { Card, TextArea, Text, TextField, Select, RadioCards, Box, DataList } from '@radix-ui/themes'
+import { Card, TextArea, Text, TextField, Select, RadioCards, Box, DataList, Flex, Tooltip, IconButton } from '@radix-ui/themes'
+import { QuestionMarkIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import * as React from 'react'
 import Field from '@components/field'
 import CodeMirror from 'react-codemirror'
+import { indexOf } from 'lodash'
+import Canvas from '@components/canvas'
 
 /*
 	=======================================================================
@@ -32,7 +35,7 @@ export const IntentForm = React.forwardRef<HTMLDivElement, IIntentForm>( (
 		)
 	}
 
-	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 w-[20rem]`} {...intrinsicProps}>
+	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 `} {...intrinsicProps}>
 		<Field>
 			<span>AI assistant intent</span>
 			<TextArea resize="vertical" placeholder={`Describe the use case for this AI bot`} value={props.value} onChange={handleChange}/>
@@ -50,7 +53,10 @@ export const IntentForm = React.forwardRef<HTMLDivElement, IIntentForm>( (
 export interface IModelForm {
 	model: string
 	options: {value: string, label: string, meta: string}[]
-	placeholder: string
+	apiKey?: string,
+	maxNewTokens?: number,
+	contextWindow?: number,
+	temp?: number
 	onFormChange: (props: any) => void
 	className?: string
 }
@@ -59,37 +65,43 @@ export const ModelForm = React.forwardRef<HTMLDivElement, IModelForm>( (
 	props, forwardRef
 ) => {
 	const {
-		model, placeholder, onFormChange, className, options, ...intrinsicProps
+		model, onFormChange, className, options, apiKey, maxNewTokens, contextWindow, temp, ...intrinsicProps
 	} = props
 
-	function handleModelChange(value) {
+	function handleChange(prop, value) {
 		console.log(value)
 		props.onFormChange(
 			{
-				model: value
+				[prop]: value
 			}
 		)
 	}
 
 	console.log(props)
 
-	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 w-[20rem]`} {...intrinsicProps}>
+	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5  gap-4 flex flex-col`} {...intrinsicProps}>
 		<Field>
 			<span>LLM model</span>
 			<Select.Root 
 				value={props.model} 
-				onValueChange={handleModelChange}
+				onValueChange={(value) => handleChange('model', value)}
 			>
-					<Select.Trigger aria-label="LLM Model" placeholder="Choose model you want to try" />
+					<Select.Trigger aria-label="LLM Model" placeholder="Choose model you want to try" style={ {[`--select-trigger-height` as any]: 'calc(32px * 1.5)' }} />
 					<Select.Content role="dialog"
           	aria-label="Languages"
           	position="popper"
 						sideOffset={4}
+						style={ {[`--select-item-height` as any]: 'calc(32px * 1.5)' }}
 						className='popover-max-height'
 					>
 						{options.length ? ( 
 							options.map((opt) => (
-								<Select.Item value={opt.value} className=''>{opt.label}</Select.Item>
+								<Select.Item value={opt.value}>
+									<Flex direction='column' gap="0.5">
+										<Text>{opt.label}</Text>
+										<Text size="1" className='text-slatedarka-10'>{opt.meta}</Text>
+									</Flex>
+								</Select.Item>
 							))
 						) : (
 							<div className="no-results">No results found</div>
@@ -97,6 +109,37 @@ export const ModelForm = React.forwardRef<HTMLDivElement, IModelForm>( (
 					</Select.Content>
 			</Select.Root>
 		</Field>
+
+		{model && indexOf(['gpt-4', 'gpt-40', 'gpt-turbo', 'l3'], model) != -1 && 
+			<>
+				<Field>
+					API key
+					<TextArea className='url-input text-xs font-mono' resize="vertical" rows={3} placeholder={'Paste API key provided by cloud service'} value={apiKey} onChange={(event) => handleChange('apiKey', event.target.value)}/>
+				</Field>
+			</>
+		}
+
+		{model && indexOf(['gpt-4', 'gpt-40', 'gpt-turbo', 'l3'], model) == -1  && 
+			<>
+				<Field className='flex-row gap-4 items-center '>
+					<span className='w-1/2 flex-grow flex flex-row items-center gap-2'>
+						Temperature
+						<Tooltip content="Increasing the temperature will make the model answer more creatively. A value of 0.1 would be more factual">
+							<InfoCircledIcon width="18" height="18" className='text-slatedarka-8 hover:text-slatedarka-10' />
+						</Tooltip>
+					</span>
+					<TextField.Root className='flex-grow w-32' type='number' min={0.1} max={1} value={temp} onChange={(event) => handleChange('temp', event.target.value)} />
+				</Field>
+				<Field className='flex-row gap-4 items-center '>
+					<span className='w-1/2 flex-grow'>Max new tokens</span>
+					<TextField.Root className='flex-grow w-32' type='number' min={1024} value={maxNewTokens} onChange={(event) => handleChange('maxNewTokens', event.target.value)} />
+				</Field>
+				<Field className='flex-row gap-4 items-center '>
+					<span className='w-1/2 flex-grow'>Context window</span>
+					<TextField.Root className='flex-grow w-32' type='number' min={1024} value={contextWindow} onChange={(event) => handleChange('contextWindow', event.target.value)} />
+				</Field>
+			</>
+		}
 	</Card>
 })
 
@@ -129,7 +172,7 @@ export const SystemPromptForm = React.forwardRef<HTMLDivElement, ISystemPromptFo
 		)
 	}
 
-	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 w-[20rem]`} {...intrinsicProps}>
+	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 `} {...intrinsicProps}>
 		<Field>
 			<span>System prompt</span>
 			<TextArea resize="vertical" rows={6} placeholder={`Compose system prompt to instruct LLM how to formulate the answer`} value={value} onChange={handleChange}/>
@@ -146,6 +189,7 @@ export const SystemPromptForm = React.forwardRef<HTMLDivElement, ISystemPromptFo
 export interface IPromptTemplateForm {
 	value: string
 	variables: string[]
+	hasContext?: boolean
 	placeholder: string
 	onFormChange: (props: any) => void
 	className?: string
@@ -155,7 +199,7 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 	props, forwardRef
 ) => {
 	const {
-		value, placeholder, onFormChange, className, variables, ...intrinsicProps
+		value, placeholder, onFormChange, className, variables, hasContext, ...intrinsicProps
 	} = props
 
 	function handleChange(value) {
@@ -171,7 +215,7 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 
 	}
 
-	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 w-[20rem]`} {...intrinsicProps}>
+	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5  gap-4 flex flex-col`} {...intrinsicProps}>
 		<Field>
 			<span>Prompt template</span>
 			<CodeMirror 
@@ -180,6 +224,36 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 				options={options}
 				className='codemirror-theme font-mono text-xs'
 			/>
+		</Field>
+		<Field>
+			Available variables
+			<DataList.Root className='cursor-auto font-normal text-xs align-baseline'>
+				<Canvas.Section canvasKey='var-system-prompt'>
+					<DataList.Item>
+						<DataList.Value className=' min-w-20'>
+							<span className='variable-badge flex text-xs'>{`{{system}}`}</span>
+						</DataList.Value>
+						<DataList.Label>System prompt</DataList.Label>
+					</DataList.Item>
+				</Canvas.Section>
+				{hasContext && 
+				<Canvas.Section canvasKey='var-context-prompt'>
+					<DataList.Item>
+						<DataList.Value className=' min-w-20'>
+							<span className='variable-badge flex text-xs'>{`{{context}}`}</span>
+						</DataList.Value>
+						<DataList.Label>Embedded context</DataList.Label>
+					</DataList.Item>
+				</Canvas.Section>}
+				<Canvas.Section canvasKey='var-user-prompt'>
+					<DataList.Item>
+						<DataList.Value className=' min-w-20'>
+							<span className='variable-badge flex text-xs'>{`{{user}}`}</span>
+						</DataList.Value>
+						<DataList.Label>User prompt</DataList.Label>
+					</DataList.Item>
+				</Canvas.Section>
+			</DataList.Root>
 		</Field>
 	</Card>
 })
@@ -221,7 +295,7 @@ export const AddContextForm = React.forwardRef<HTMLDivElement, IAddContextForm>(
 	}
 
 	return (
-		<Card ref={forwardRef} className={`${className || ''} py-5 px-5 w-[20rem] gap-4 flex flex-col`} {...intrinsicProps}>
+		<Card ref={forwardRef} className={`${className || ''} py-5 px-5  gap-4 flex flex-col`} {...intrinsicProps}>
 			<Field>
 				Context type
 				<RadioCards.Root columns="2" defaultValue={ContextType.url} value={value}>
@@ -239,12 +313,14 @@ export const AddContextForm = React.forwardRef<HTMLDivElement, IAddContextForm>(
 					Request URL
 					<TextArea className='url-input text-xs font-mono' resize="vertical" rows={3} placeholder={'You can use variables available below in URL'} value={props.url} onChange={(event) => handleChange('url', event.target.value)}/>
 					<DataList.Root className='cursor-auto font-normal text-xs align-baseline'>
+						<Canvas.Section canvasKey='var-user-prompt-context'>
 						<DataList.Item>
 							<DataList.Value className=' min-w-20'>
 								<span className='variable-badge flex text-xs'>{`{{user}}`}</span>
 							</DataList.Value>
 							<DataList.Label>User prompt</DataList.Label>
 						</DataList.Item>
+						</Canvas.Section>
 					</DataList.Root>
 				</Field>
 				</>}
@@ -332,7 +408,7 @@ export const UserPromptForm = React.forwardRef<HTMLDivElement, IUserPromptForm>(
 		)
 	}
 
-	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 w-[20rem]`} {...intrinsicProps}>
+	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5 `} {...intrinsicProps}>
 		<Field>
 			<span>User prompt</span>
 			<TextArea resize="vertical" rows={6} placeholder={`Compose user prompt or leave blank for live chat`} value={props.value} onChange={handleChange}/>

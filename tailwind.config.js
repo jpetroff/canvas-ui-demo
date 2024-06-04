@@ -9,4 +9,9 @@ module.exports = {
     extend: {},
   },
   plugins: [tailwindcssRadixColors],
+  safelist: [
+    {
+      pattern: /(col|row)-(start|span)-[0-9]?/,
+    },
+  ]
 }
