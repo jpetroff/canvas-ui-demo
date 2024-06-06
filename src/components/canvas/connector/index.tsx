@@ -44,12 +44,16 @@ const Connector = React.memo<IConnectorProps>(
 			() => {
 				const canvas = ref.current
 				const ctx = canvas.getContext('2d')
+
+				const connectorColor = "#5472E4"
+				const connectorWidth = 2
+
 				
 				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 				ctx.beginPath()
 
-				ctx.lineWidth = 2
-				ctx.strokeStyle = "#818cf8"
+				ctx.lineWidth = connectorWidth
+				ctx.strokeStyle = connectorColor
 
 				const start = [
 					(props.start.x + padding),
@@ -72,12 +76,12 @@ const Connector = React.memo<IConnectorProps>(
 				}
 				ctx.stroke()
 
-				ctx.fillStyle = "#818cf8"
+				ctx.fillStyle = connectorColor
 				ctx.beginPath()
 				ctx.arc(...start, 3, 0, 2 * Math.PI)
 				ctx.fill()
 
-				ctx.fillStyle = "#818cf8"
+				ctx.fillStyle = connectorColor
 				ctx.beginPath()
 				ctx.arc(...end, 3, 0, 2 * Math.PI)
 				ctx.fill()

@@ -6,6 +6,7 @@ import Sidebar from '@apps/sidebar'
 /* PAGES */
 import PageIndex from '@pages/index'
 import PageAi from '@pages/ai'
+import PageChat from '@pages/chat'
 
 export default function createRouter() {
 
@@ -28,6 +29,16 @@ export default function createRouter() {
           <Sidebar className="">
           </Sidebar>
           <PageAi />
+        </div>)
+    },
+    {
+      path: '/chat',
+      element: (
+        <div className=" gradient-bg w-screen h-dvh grid grid-cols-[theme(spacing.72)_1fr] grid-rows-[theme(spacing.16)_1fr]">
+          <Header className="col-span-2" />
+          <Sidebar className="">
+          </Sidebar>
+          <PageChat />
         </div>)
     }
   ])

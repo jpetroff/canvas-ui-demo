@@ -1,5 +1,5 @@
 import React from "react"
-import { IntentForm, ModelForm, SystemPromptForm, PromptTemplateForm, AddContextForm, UserPromptForm } from "./forms"
+import { IntentForm, ModelForm, SystemPromptForm, PromptTemplateForm, AddContextForm, UserPromptForm, PlaceholderCard } from "./forms"
 
 export const formMappings = {
 	'ai-intent-form': {
@@ -42,9 +42,10 @@ export const formMappings = {
 		component: PromptTemplateForm,
 		props: {
 			canvasKey: 'ai-prompt-template',
-			value: [`System: {{system}}`, `User: {{user}}`, `Answer: {{answer}}`].join(String.fromCharCode(13, 13)),
-			variables: ['system', 'context', 'user', 'answer'],
-			hasContext: false
+			value: [`Question: {{user}}`, `Response:`].join(String.fromCharCode(13, 13)),
+			variables: [`[INST] {{sytem}} [/INST]`, 'Context: {{context}}', 'Question: {{user}}', 'Response:'],
+			hasContext: false, 
+			hasSystem: false
 		}
 	},
 	'ai-add-context': {
@@ -73,10 +74,20 @@ export const formMappings = {
 			value: ''
 		}
 	},
-	'ai-validator-placeholder': {
-		component: <></>,
+	'ai-system-prompt-placeholder': {
+		component: PlaceholderCard,
 		props: {
-			canvasKey: 'ai-validator-placeholder'
+			canvasKey: 'ai-system-prompt-placeholder',
+			value: 'ai-system-prompt',
+			text: 'Add system prompt'
+		}
+	},
+	'ai-add-context-placeholder': {
+		component: PlaceholderCard,
+		props: {
+			canvasKey: 'ai-add-context-placeholder',
+			value: 'ai-add-context',
+			text: 'Add context'
 		}
 	}
 }

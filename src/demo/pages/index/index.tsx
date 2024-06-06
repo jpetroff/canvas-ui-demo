@@ -23,8 +23,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 	const [storedDescriptors, storeDescriptors, removeDescriptors] = useLocalStorage<IContainerDescriptorCollection>('test-app-storage-descriptors')
 	const [storedConnectors, storeConnectors, removeConnectors] = useLocalStorage<TConnectorPathList>('test-app-storage-connectors')
 
-
-	const [containers, setContainers] = React.useState([
+	const containersInitvalue = [
 		<Canvas.Container swappable={true} canvasKey='entry-form'>
 			<TestForm className='p-4' />
 		</Canvas.Container>,
@@ -47,7 +46,10 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 		<Canvas.Container swappable={true} canvasKey='entry-form-4'>
 			<TestForm className='p-4' />
 		</Canvas.Container>
-	])
+	]
+
+
+	const [containers, setContainers] = React.useState(containersInitvalue)
 
 	const [containerCoordinates, setContainerCoordinates] = React.useState<IContainerDescriptorCollection>(storedDescriptors || {})
 	const [connectors, setConnectors] = React.useState<TConnectorPathList>(storedConnectors || [
@@ -138,6 +140,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			scale={scale} addMode={addMode} 
 			onScaleChange={(scale) => setScale(scale)} 
 			onAddMode={(type) => setAddMode(type)}
+			onReset={() => {removeConnectors(); removeDescriptors(); setConnectors([]); setContainers(containersInitvalue); setContainerCoordinates({})} }
 		/>
 		</>
 };

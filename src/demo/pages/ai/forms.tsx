@@ -1,9 +1,9 @@
-import { Card, TextArea, Text, TextField, Select, RadioCards, Box, DataList, Flex, Tooltip, IconButton } from '@radix-ui/themes'
+import { Card, TextArea, Text, TextField, Select, RadioCards, Box, DataList, Flex, Tooltip, IconButton, Button } from '@radix-ui/themes'
 import { QuestionMarkIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import * as React from 'react'
 import Field from '@components/field'
 import CodeMirror from 'react-codemirror'
-import { indexOf } from 'lodash'
+import { defer, indexOf } from 'lodash'
 import Canvas from '@components/canvas'
 
 /*
@@ -190,6 +190,7 @@ export interface IPromptTemplateForm {
 	value: string
 	variables: string[]
 	hasContext?: boolean
+	hasSystem?: boolean
 	placeholder: string
 	onFormChange: (props: any) => void
 	className?: string
@@ -199,7 +200,7 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 	props, forwardRef
 ) => {
 	const {
-		value, placeholder, onFormChange, className, variables, hasContext, ...intrinsicProps
+		value, placeholder, onFormChange, className, variables, hasContext, hasSystem, ...intrinsicProps
 	} = props
 
 	function handleChange(value) {
@@ -212,30 +213,22 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 
 	const options = {
 		lineNumbers: false
-
 	}
 
 	return <Card ref={forwardRef} className={`${props.className || ''} py-5 px-5  gap-4 flex flex-col`} {...intrinsicProps}>
-		<Field>
-			<span>Prompt template</span>
-			<CodeMirror 
-				value={props.value} onChange={handleChange}
-				placeholder={placeholder}
-				options={options}
-				className='codemirror-theme font-mono text-xs'
-			/>
-		</Field>
-		<Field>
-			Available variables
+		<Field className='mb-4'>
+			<Text size="2" className='mb-2'>Available variables</Text>
 			<DataList.Root className='cursor-auto font-normal text-xs align-baseline'>
-				<Canvas.Section canvasKey='var-system-prompt'>
+				
+				<Canvas.Section canvasKey='var-user-prompt'>
 					<DataList.Item>
 						<DataList.Value className=' min-w-20'>
-							<span className='variable-badge flex text-xs'>{`{{system}}`}</span>
+							<span className='variable-badge flex text-xs'>{`{{user}}`}</span>
 						</DataList.Value>
-						<DataList.Label>System prompt</DataList.Label>
+						<DataList.Label>User prompt</DataList.Label>
 					</DataList.Item>
 				</Canvas.Section>
+
 				{hasContext && 
 				<Canvas.Section canvasKey='var-context-prompt'>
 					<DataList.Item>
@@ -245,16 +238,36 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 						<DataList.Label>Embedded context</DataList.Label>
 					</DataList.Item>
 				</Canvas.Section>}
-				<Canvas.Section canvasKey='var-user-prompt'>
+
+				{hasSystem && <Canvas.Section canvasKey='var-system-prompt'>
 					<DataList.Item>
 						<DataList.Value className=' min-w-20'>
-							<span className='variable-badge flex text-xs'>{`{{user}}`}</span>
+							<span className='variable-badge flex text-xs'>{`{{system}}`}</span>
 						</DataList.Value>
-						<DataList.Label>User prompt</DataList.Label>
+						<DataList.Label>System prompt</DataList.Label>
 					</DataList.Item>
-				</Canvas.Section>
+				</Canvas.Section>}
+
+					
 			</DataList.Root>
 		</Field>
+		
+		<Field>
+			<span>Prompt template</span>
+			<CodeMirror 
+				value={value} onChange={handleChange}
+				placeholder={placeholder}
+				options={options}
+				className='codemirror-theme font-mono text-xs'
+			/>
+		</Field>
+
+		<Field>
+			<Button size="2" variant="soft" className='cursor-pointer'>
+				Generate automatically
+			</Button>
+		</Field>
+
 	</Card>
 })
 
@@ -415,3 +428,38 @@ export const UserPromptForm = React.forwardRef<HTMLDivElement, IUserPromptForm>(
 		</Field>
 	</Card>
 })
+
+/*
+	=======================================================================
+	User Prompt
+	=======================================================================
+*/
+
+export interface IPlaceholderCard {
+	value: string
+	onAddCard: (value: any) => void
+	className?: string
+	children?: React.ReactNode
+}
+
+export const PlaceholderCard = React.forwardRef<HTMLDivElement, IPlaceholderCard>( (
+	props, forwardRef
+) => {
+	const {
+		value, onAddCard, className, children, ...intrinsicProps
+	} = props
+
+	function handleAdd() {
+		props.onAddCard(
+			{
+				value: value
+			}
+		)
+	}
+
+	return <div ref={forwardRef} className={`${props.className || ''}`} {...intrinsicProps}>
+		{children}
+	</div>
+})
+
+PlaceholderCard.displayName = 'PlaceholderCard'
