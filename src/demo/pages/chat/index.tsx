@@ -3,7 +3,7 @@ import * as React from 'react'
 import Toolbar from '@apps/toolbar'
 import Canvas from '@components/canvas'
 import { formMappings } from './form-setup'
-import { Dictionary, cloneDeep, extend, filter, findIndex } from 'lodash'
+import { Dictionary, cloneDeep, extend, filter, findIndex, findLast } from 'lodash'
 import './style.css' 
 import { useDidMount } from '@components/canvas/libs/custom-hooks'
 import { isAbsolute } from 'path'
@@ -74,27 +74,25 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 		let updatedConnectors = Array.from(connectors)
 
 		updatedConnectors = filter(connectors, (connector) => String(connector.from) != from)
-
+		console.log(`wtf new`, from, container, to)
 		if(!to) {
 			updatedForms.push(
 				formMappings['default'](updatedForms.length).props
 			)
-	
-			
+
+			const newCol = (updatedCoords[container || lastItem.canvasKey].col || 0) + 1
+			const _lastColItem = findLast(updatedCoords, {col: newCol}) || {row:0}
+
 			updatedCoords[updatedForms[index].canvasKey] = {
 				col: (updatedCoords[container || lastItem.canvasKey].col || 0) + 1,
-				row: 1,
+				row: _lastColItem.row + 1,
 				colSpan: 1,
 				rowSpan: 1
 			}
-	
-			
-			if(from) {
-				updatedConnectors.push({
-					from,
-					to: `${updatedForms[index].canvasKey}~top`
-				})
-			}
+			updatedConnectors.push({
+				from,
+				to: `${updatedForms[index].canvasKey}~top`
+			})
 		} else {
 			updatedConnectors.push({
 				from,
