@@ -1,11 +1,11 @@
 import React from "react"
-import { ChatBlock, FChoice, FText } from "./forms"
+import { ChatBlock, FChoice, FGoTo, FReply, FScript, FText } from "./forms"
 
 export const formMappings = {
-	'chat-form-start': {
+	'chat-flow-start': {
 		component: ChatBlock,
 		props: {
-			canvasKey: 'chat-form-start',
+			canvasKey: 'chat-flow-start',
 			content: [
 				{
 					field: 'text',
@@ -19,7 +19,7 @@ export const formMappings = {
 		return {
 			component: ChatBlock,
 			props: {
-				canvasKey: `chat-form-${index}`,
+				canvasKey: `chat-flow-${index}`,
 				content: [],
 			}
 		}
@@ -37,8 +37,32 @@ export const fieldMappings = {
 	'choice': {
 		component: FChoice,
 		props: {
-			choices: [ {value: '' } ],
+			choices: [],
 			field: 'choice'
+		}
+	},
+	'reply': {
+		component: FReply,
+		props: {
+			choices: [],
+			field: 'reply'
+		}
+	},
+	'goto': {
+		component: FGoTo,
+		props: {
+			existingFlows: [],
+			value: '',
+			field: 'goto'
+		}
+	},
+	'script': {
+		component: FScript,
+		props: {
+			existingFlows: [],
+			value: '',
+			choices: [],
+			field: 'script'
 		}
 	}
 }

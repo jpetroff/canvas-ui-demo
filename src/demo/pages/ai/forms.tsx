@@ -2,7 +2,8 @@ import { Card, TextArea, Text, TextField, Select, RadioCards, Box, DataList, Fle
 import { QuestionMarkIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import * as React from 'react'
 import Field from '@components/field'
-import CodeMirror from 'react-codemirror'
+import CodeMirror from '@uiw/react-codemirror'
+import { xcodeDark } from '@uiw/codemirror-theme-xcode'
 import { defer, indexOf } from 'lodash'
 import Canvas from '@components/canvas'
 
@@ -212,6 +213,10 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 	}
 
 	const options = {
+		foldGutter: false,
+		dropCursor: false,
+		allowMultipleSelections: false,
+		indentOnInput: false,
 		lineNumbers: false
 	}
 
@@ -257,7 +262,10 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 			<CodeMirror 
 				value={value} onChange={handleChange}
 				placeholder={placeholder}
-				options={options}
+				basicSetup={options}
+				theme={xcodeDark}
+				height='auto'
+				minHeight='96px'
 				className='codemirror-theme font-mono text-xs'
 			/>
 		</Field>

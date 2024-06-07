@@ -3,7 +3,7 @@ import * as React from 'react'
 import Toolbar from '@apps/toolbar'
 import Canvas from '@components/canvas'
 import { formMappings } from './form-setup'
-import { Dictionary, cloneDeep, extend, findIndex } from 'lodash'
+import { Dictionary, cloneDeep, extend, filter, findIndex } from 'lodash'
 import './style.css' 
 import { useDidMount } from '@components/canvas/libs/custom-hooks'
 import { isAbsolute } from 'path'
@@ -13,7 +13,7 @@ import { PlusIcon } from '@radix-ui/react-icons'
 import { ChatBlock } from './forms'
 
 const initValue = [
-	formMappings['chat-form-start'].props
+	formMappings['chat-flow-start'].props
 ]
 
 const initConnectors = [
@@ -21,7 +21,7 @@ const initConnectors = [
 ]
 
 const gridCoords = {
-	'chat-form-start': { col: 1, row: 1,	colSpan: 1,	rowSpan: 1, absolute: false}
+	'chat-flow-start': { col: 1, row: 1,	colSpan: 1,	rowSpan: 1, absolute: false}
 }
 
 interface IChatPageProps { 
@@ -65,28 +65,40 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 		setForms(current)
 	}
 
-	function handleAddFlow(from: string, container: string) {
+	function handleAddFlow(from: string, container: string, to?: string) {
 		let updatedForms = Array.from(forms)
 		const index = updatedForms.length
 		const lastItem = updatedForms[index - 1]
 
-		updatedForms.push(
-			formMappings['default'](updatedForms.length).props
-		)
-
 		let updatedCoords = cloneDeep(containerCoordinates)
-		updatedCoords[updatedForms[index].canvasKey] = {
-			col: (updatedCoords[container || lastItem.canvasKey].col || 0) + 1,
-			row: 1,
-			colSpan: 1,
-			rowSpan: 1
-		}
-
 		let updatedConnectors = Array.from(connectors)
-		if(from) {
+
+		updatedConnectors = filter(connectors, (connector) => String(connector.from) != from)
+
+		if(!to) {
+			updatedForms.push(
+				formMappings['default'](updatedForms.length).props
+			)
+	
+			
+			updatedCoords[updatedForms[index].canvasKey] = {
+				col: (updatedCoords[container || lastItem.canvasKey].col || 0) + 1,
+				row: 1,
+				colSpan: 1,
+				rowSpan: 1
+			}
+	
+			
+			if(from) {
+				updatedConnectors.push({
+					from,
+					to: `${updatedForms[index].canvasKey}~top`
+				})
+			}
+		} else {
 			updatedConnectors.push({
 				from,
-				to: updatedForms[index].canvasKey
+				to: `${to}~top`
 			})
 		}
 
@@ -100,8 +112,12 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 
 	function handleFormRemove(index: number) {
 		let updatedForms = Array.from(forms)
+		const key = updatedForms[index].canvasKey
+		let updatedConnectors = Array.from(connectors)
+		updatedConnectors = filter(connectors, (connector) => String(connector.from).indexOf(key) == -1 && String(connector.to).indexOf(key) == -1)
 		updatedForms.splice(index, 1)
 		setForms(updatedForms)
+		setConnectors(updatedConnectors)
 	}
 
 
@@ -126,9 +142,10 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 					return (
 						<Canvas.Container blockId={props.canvasKey} {...props}>
 							<ContainerComponent 
-								onFlowAdd={(from) => handleAddFlow(from, props.canvasKey)} 
+								onFlowAdd={(from, to) => handleAddFlow(from, props.canvasKey, to)} 
 								onFormChange={ (value) => handleFormChange(props.canvasKey, value) }
 								onFlowRemove={ (value) => handleFormRemove(index) }
+								existingFlows={ forms.map( (form) => { return {key: form.canvasKey, name: String(form.canvasKey).replace(/-/ig, ' ')} } )}
 							/>
 						</Canvas.Container>
 					)
@@ -143,7 +160,7 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 			scale={scale} addMode={addMode} 
 			onScaleChange={(scale) => setScale(scale)} 
 			onAddMode={(type) => setAddMode(type)}
-			onReset={() => {setContainerCoordinates(gridCoords); removeExtras(); setForms(initValue)} }
+			onReset={() => {setContainerCoordinates(gridCoords); removeExtras(); setForms(initValue); setConnectors([])} }
 		/>
 	</>)
 }
