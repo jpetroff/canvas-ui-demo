@@ -3,7 +3,7 @@ import * as React from 'react'
 import Toolbar from '@apps/toolbar'
 import Canvas from '@components/canvas'
 import { formMappings } from './form-setup'
-import { Dictionary, cloneDeep, extend, filter, findIndex, findLast, max } from 'lodash'
+import { Dictionary, cloneDeep, each, extend, filter, find, findIndex, findLast, max } from 'lodash'
 import './style.css' 
 import { useDidMount } from '@components/canvas/libs/custom-hooks'
 import { isAbsolute } from 'path'
@@ -40,7 +40,7 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 	const [scale, setScale] = React.useState(1)
 	const [addMode, setAddMode] = React.useState(null)
 
-	function conditionalChecks(current: any[]) {
+	function conditionalChecks(currentForms: any[]) {
 
 	}
 
@@ -50,9 +50,10 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 		setForms(current)
 	})
 
-	function handleFormChange(key: string, form: any) {
+	function handleFormChange(key: string, form: any, flow?: {from: string, to?: string}) {
 		let current = cloneDeep(forms)
 		const index = findIndex(current, { canvasKey: key })
+
 		if(index == -1) {
 			console.warn(`Form with key '${key}' and index ${index} not found! Array`, current)
 			return
@@ -60,55 +61,114 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 
 		current[index] = extend(current[index], form)
 		console.log(`Form change`, key, form, current) 
+ 
+		let newKey = null
+		if(flow) {
+			newKey = updateFlows(current, index, key, flow.from, flow.to)
+		}
 
-		conditionalChecks(current) 
+		if(newKey && find(current[index].content, {field: 'goto', value: '___new-flow'})) {
+			find(current[index].content, {field: 'goto', value: '___new-flow'}).value = newKey
+		} else if(newKey) {
+			const _scripts = filter(current[index].content, {field: 'script'})
+			each(_scripts, (scriptField) => {
+				each(scriptField.choices, (choice) => {
+					if(choice.dest == '___new-flow') choice.dest = newKey
+				})
+			} )
+		}
+
+		conditionalChecks(current)
 		setForms(current)
 	}
 
-	function handleAddFlow(from: string, container: string, to?: string) {
-		let updatedForms = Array.from(forms)
-		const index = updatedForms.length
-		const lastItem = updatedForms[index - 1]
+	function updateFlows(updatedForms: any, index: number, container: string, from: string, to?: string) {
 
 		let updatedCoords = cloneDeep(containerCoordinates)
 		let updatedConnectors = Array.from(connectors)
 
+		let newFlowKey = null
+
 		updatedConnectors = filter(connectors, (connector) => String(connector.from) != from)
-		console.log(`wtf new`, from, container, to)
-		if(!to) {
+		if(!to || to == '___new-flow') {
+			const lastIndex = updatedForms.length
 			updatedForms.push(
 				formMappings['default'](updatedForms.length).props
 			)
+			const prevItem = updatedForms[lastIndex - 1]
 
-			const newCol = (updatedCoords[container || lastItem.canvasKey].col || 0) + 1
+			const newCol = (updatedCoords[container || prevItem.canvasKey].col || 0) + 1
 			const _lastColItem = findLast(updatedCoords, {col: newCol}) || {row:0}
 			const _currRow = updatedCoords[container].row
 			const _checkSpaceNext = findLast(updatedCoords, {col: newCol, row: _currRow})
 
-			updatedCoords[updatedForms[index].canvasKey] = {
-				col: (updatedCoords[container || lastItem.canvasKey].col || 0) + 1,
+			updatedCoords[updatedForms[lastIndex].canvasKey] = {
+				col: (updatedCoords[container || prevItem.canvasKey].col || 0) + 1,
 				row: _checkSpaceNext ? _lastColItem.row + 1 : _currRow,
 				colSpan: 1,
 				rowSpan: 1
 			}
 			updatedConnectors.push({
 				from,
-				to: `${updatedForms[index].canvasKey}~top`
+				to: `${updatedForms[lastIndex].canvasKey}~top`
 			})
+			newFlowKey = updatedForms[lastIndex].canvasKey
 		} else {
 			updatedConnectors.push({
 				from,
 				to: `${to}~top`
 			})
 		}
-
-		conditionalChecks(updatedForms)
-
-		console.log(updatedForms)
-		setForms(updatedForms)
 		setContainerCoordinates(updatedCoords)
 		setConnectors(updatedConnectors)
+
+		return newFlowKey
 	}
+
+	// function handleAddFlow(from: string, container: string, to?: string) {
+	// 	let updatedForms = Array.from(forms)
+	// 	const index = updatedForms.length
+	// 	const lastItem = updatedForms[index - 1]
+
+	// 	let updatedCoords = cloneDeep(containerCoordinates)
+	// 	let updatedConnectors = Array.from(connectors)
+
+	// 	updatedConnectors = filter(connectors, (connector) => String(connector.from) != from)
+	// 	console.log(`wtf new`, from, container, to)
+	// 	if(!to) {
+	// 		updatedForms.push(
+	// 			formMappings['default'](updatedForms.length).props
+	// 		)
+
+	// 		const newCol = (updatedCoords[container || lastItem.canvasKey].col || 0) + 1
+	// 		const _lastColItem = findLast(updatedCoords, {col: newCol}) || {row:0}
+	// 		const _currRow = updatedCoords[container].row
+	// 		const _checkSpaceNext = findLast(updatedCoords, {col: newCol, row: _currRow})
+
+	// 		updatedCoords[updatedForms[index].canvasKey] = {
+	// 			col: (updatedCoords[container || lastItem.canvasKey].col || 0) + 1,
+	// 			row: _checkSpaceNext ? _lastColItem.row + 1 : _currRow,
+	// 			colSpan: 1,
+	// 			rowSpan: 1
+	// 		}
+	// 		updatedConnectors.push({
+	// 			from,
+	// 			to: `${updatedForms[index].canvasKey}~top`
+	// 		})
+	// 	} else {
+	// 		updatedConnectors.push({
+	// 			from,
+	// 			to: `${to}~top`
+	// 		})
+	// 	}
+
+	// 	// conditionalChecks(updatedForms)
+
+	// 	// console.log(updatedForms)
+	// 	// setForms(updatedForms)
+	// 	setContainerCoordinates(updatedCoords)
+	// 	setConnectors(updatedConnectors)
+	// }
 
 	function handleFormRemove(index: number) {
 		let updatedForms = Array.from(forms)
@@ -142,8 +202,7 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 					return (
 						<Canvas.Container blockId={props.canvasKey} {...props}>
 							<ContainerComponent 
-								onFlowAdd={(from, to) => handleAddFlow(from, props.canvasKey, to)} 
-								onFormChange={ (value) => handleFormChange(props.canvasKey, value) }
+								onFormChange={ (value, flow) => handleFormChange(props.canvasKey, value, flow) }
 								onFlowRemove={ (value) => handleFormRemove(index) }
 								existingFlows={ forms.map( (form) => { return {key: form.canvasKey, name: String(form.canvasKey).replace(/-/ig, ' ')} } )}
 							/>

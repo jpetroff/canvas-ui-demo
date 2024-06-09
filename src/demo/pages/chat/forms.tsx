@@ -31,8 +31,7 @@ export interface IChatBlock {
 	blockId: string
 	content: {field: string, [key: string]: any}[]
 	existingFlows: {key: string, name: string}[]
-	onFormChange: (props: any) => void
-	onFlowAdd: (from: string, to?: string) => void
+	onFormChange: (props: any, flow?: any) => void
 	onFlowRemove: (key: string) => void
 	className?: string
 	canvasKey: string
@@ -42,20 +41,21 @@ export const ChatBlock = React.forwardRef<HTMLDivElement, IChatBlock>( (
 	props, forwardRef
 ) => {
 	const {
-		blockId, content, onFormChange, onFlowAdd, className, existingFlows, ...intrinsicProps
+		blockId, content, onFormChange, className, existingFlows, ...intrinsicProps
 	} = props
 
 	const selfKey = props['data-key']
 
-	function handleChange(content) {
+	function handleChange(content, flow?) {
 		props.onFormChange(
 			{
 				content: content
-			}
+			},
+			flow
 		)
 	}
 
-	function onFieldChange(index: number, fieldType: string, values: any) {
+	function onFieldChange(index: number, fieldType: string, values: any, flow: any) {
 		const newContent = Array.from(content)
 		console.log(index, fieldType, values)
 		if(index != -1) {
@@ -63,7 +63,7 @@ export const ChatBlock = React.forwardRef<HTMLDivElement, IChatBlock>( (
 		} else {
 			newContent.push({...fieldMappings[fieldType].props, ...values})
 		}
-		handleChange(newContent)
+		handleChange(newContent, flow)
 	}
 
 	function handleAddField(fieldType: string) {
@@ -85,15 +85,13 @@ export const ChatBlock = React.forwardRef<HTMLDivElement, IChatBlock>( (
 		{content.map( 
 			( fieldObject, index ) => {
 				const FieldComponent = fieldMappings[fieldObject.field].component
-				const flowAddProp = ['FChoice', 'FGoTo', 'FReply', 'FScript'].indexOf(FieldComponent.displayName) != -1 ? { onFlowAdd } : {}
 				const existingFlowsProp = ['FGoTo', 'FScript'].indexOf(FieldComponent.displayName) != -1 ? { existingFlows } : {}
 				return (
 					<FieldComponent 
 						key={`${fieldObject.field}-${index}`} 
 						_block={`${props.blockId}~${index}`}
-						onFieldChange={(values) => onFieldChange(index, fieldObject.field, values)}
+						onFieldChange={(values, flow) => onFieldChange(index, fieldObject.field, values, flow)}
 						{ ...fieldObject } 
-						{ ...flowAddProp }
 						{ ...existingFlowsProp }
 					/>
 				)
@@ -147,7 +145,7 @@ export const ChatBlock = React.forwardRef<HTMLDivElement, IChatBlock>( (
 interface IField {
 	field: string
 	_block: string
-	onFieldChange: (values: any) => void
+	onFieldChange: (values: any, flow?: {from: string, to?: string}) => void
 }
 
 /* 
@@ -180,7 +178,6 @@ export const FText = React.forwardRef<HTMLDivElement, ITextField>(
 export interface IChoiceField extends IField {
 	choices: {value: string, connectorName?: string}[]
 	onButtonAdd: () => void 
-	onFlowAdd: (from: string, to?: string) => void
 	existingFlows: {key: string, name: string}[]
 	label?: string
 }
@@ -219,7 +216,9 @@ export const FChoice = React.forwardRef<HTMLDivElement, IChoiceField>(
 			})
 		}
 
-		console.log(`Flow add`, props.onFlowAdd)
+		function handleFlowAdd(from: string) {
+			props.onFieldChange({}, {from})
+		}
 
 		return <Field nolabel>
 			{props.label || 'Wait for user answer:'}
@@ -241,7 +240,7 @@ export const FChoice = React.forwardRef<HTMLDivElement, IChoiceField>(
 						</Tooltip>
 
 						<Tooltip content='Create new flow'>
-							<IconButton variant='ghost' color='gray' size="3" onClick={() => props.onFlowAdd(sectionName)}>
+							<IconButton variant='ghost' color='gray' size="3" onClick={() => handleFlowAdd(sectionName)}>
 								{FlowIcon}
 							</IconButton>
 						</Tooltip>
@@ -274,7 +273,6 @@ export interface IReplyField extends IField {
 	save: boolean
 	variable: string
 	onButtonAdd: () => void 
-	onFlowAdd: (from: string, to?: string) => void 
 	existingFlows: {key: string, name: string}[]
 	onScriptAdd: () => void
 }
@@ -317,7 +315,9 @@ export const FReply = React.forwardRef<HTMLDivElement, IReplyField>(
 			})
 		}
 
-		console.log(`Flow add`, props.onFlowAdd)
+		function handleFlowAdd(from: string) {
+			props.onFieldChange({}, {from})
+		}
 
 		return <Field nolabel>
 			Wait for user text reply:
@@ -357,7 +357,7 @@ export const FReply = React.forwardRef<HTMLDivElement, IReplyField>(
 						</Tooltip>
 
 						<Tooltip content='Create new flow'>
-							<IconButton variant='ghost' color='gray' size="3" onClick={() => props.onFlowAdd(sectionName)}>
+							<IconButton variant='ghost' color='gray' size="3" onClick={() => handleFlowAdd(sectionName)}>
 								{FlowIcon}
 							</IconButton>
 						</Tooltip>
@@ -381,32 +381,25 @@ FReply.displayName = 'FReply'
 	Go to
 */
 
-export interface IGoToField {
+export interface IGoToField extends IField {
 	existingFlows: {key: string, name: string}[]
 	value: string
 	_block: string
 	onFlowAdd: (from: string, to?: string) => void
-	onFieldChange: (value: any) => void
 }
 
 export const FGoTo = React.forwardRef<HTMLDivElement, IGoToField>(
 	(
 		props, forwardRef
 	) => {
-		const { value, existingFlows, onFlowAdd, onFieldChange, _block, ...intrinsicProps } = props
+		const { value, existingFlows, onFlowAdd, _block, onFieldChange, ...intrinsicProps } = props
 
 		const id = React.useId()
 
 		const sectionName = `${_block}~goto`
 
 		function handleChange(value: string) {
-			if(value == '___new-flow') {
-				onFlowAdd(sectionName)
-			} else {
-				onFlowAdd(sectionName, value)
-				onFieldChange({value: value})
-				// onFieldChange({value: value})
-			}
+			onFieldChange({value: value}, {from: sectionName, to: value == '___new-flow' ? void 0 : value})
 		}
 
 		return (
@@ -447,13 +440,11 @@ FGoTo.displayName = 'FGoTo'
 	Script
 */
 
-export interface IScriptField {
+export interface IScriptField extends IField {
 	existingFlows: {key: string, name: string}[]
 	value: string
 	_block: string
 	choices: {value: string, connector: string, dest: string}[]
-	onFlowAdd: (from: string, to?: string) => void
-	onFieldChange: (value: any) => void
 }
 
 const options ={
@@ -468,11 +459,10 @@ export const FScript = React.forwardRef<HTMLDivElement, IScriptField>(
 	(
 		props, forwardRef
 	) => {
-		const { value, existingFlows, onFlowAdd, onFieldChange, _block, choices, ...intrinsicProps } = props
+		const { value, existingFlows, onFieldChange, _block, choices, ...intrinsicProps } = props
 
-		function handleChange(valueObj: any) {
-			console.log(valueObj, { value, existingFlows, onFlowAdd, onFieldChange, choices, ...valueObj})
-			onFieldChange({ value, existingFlows, onFlowAdd, onFieldChange, choices, ...valueObj})
+		function handleChange(valueObj: any, flow?: {from: string, to: string}) {
+			onFieldChange({ value, choices, ...valueObj}, flow)
 		}
 
 		function editChoice(index, value) {
@@ -507,14 +497,15 @@ export const FScript = React.forwardRef<HTMLDivElement, IScriptField>(
 			console.log(`ch conn`, connector)
 			let newChoices = Array.from(choices)
 			newChoices[index].dest = connector
-			handleChange({
-				choices: newChoices
-			})
-			if(connector == '___new-flow') {
-				onFlowAdd(sectionName)
-			} else {
-				onFlowAdd(sectionName, connector)
-			}
+			handleChange(
+				{
+					choices: newChoices
+				},
+				{
+					from: sectionName,
+					to: connector == '___new-flow' ? void 0 : connector
+				}
+			)
 		}
 
 		return (
