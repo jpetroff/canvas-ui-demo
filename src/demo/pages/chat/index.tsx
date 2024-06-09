@@ -3,7 +3,7 @@ import * as React from 'react'
 import Toolbar from '@apps/toolbar'
 import Canvas from '@components/canvas'
 import { formMappings } from './form-setup'
-import { Dictionary, cloneDeep, extend, filter, findIndex, findLast } from 'lodash'
+import { Dictionary, cloneDeep, extend, filter, findIndex, findLast, max } from 'lodash'
 import './style.css' 
 import { useDidMount } from '@components/canvas/libs/custom-hooks'
 import { isAbsolute } from 'path'
@@ -61,7 +61,7 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 		current[index] = extend(current[index], form)
 		console.log(`Form change`, key, form, current) 
 
-		conditionalChecks(current)
+		conditionalChecks(current) 
 		setForms(current)
 	}
 
@@ -82,10 +82,12 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 
 			const newCol = (updatedCoords[container || lastItem.canvasKey].col || 0) + 1
 			const _lastColItem = findLast(updatedCoords, {col: newCol}) || {row:0}
+			const _currRow = updatedCoords[container].row
+			const _checkSpaceNext = findLast(updatedCoords, {col: newCol, row: _currRow})
 
 			updatedCoords[updatedForms[index].canvasKey] = {
 				col: (updatedCoords[container || lastItem.canvasKey].col || 0) + 1,
-				row: _lastColItem.row + 1,
+				row: _checkSpaceNext ? _lastColItem.row + 1 : _currRow,
 				colSpan: 1,
 				rowSpan: 1
 			}
@@ -103,9 +105,9 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 		conditionalChecks(updatedForms)
 
 		console.log(updatedForms)
+		setForms(updatedForms)
 		setContainerCoordinates(updatedCoords)
 		setConnectors(updatedConnectors)
-		setForms(updatedForms)
 	}
 
 	function handleFormRemove(index: number) {
@@ -163,7 +165,7 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 	</>)
 }
 
-export default PageChat
+export default PageChat 
 
 function createGridClass( {col, row, colSpan, rowSpan}: {col:number, row: number, colSpan:number, rowSpan: number} ) : string {
 	return [

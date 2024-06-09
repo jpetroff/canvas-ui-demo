@@ -1,12 +1,24 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js & TypeScript",
+	"name": "canvas-ui",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			
+		}
+	},
+
+	"runArgs": ["--name=canvas-ui"],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+	// "features": {
+	// 	"ghcr.io/devcontainers/features/git:1": {
+	// 			"version": "latest",
+	// 			"ppa": "false"
+	// 	}
+	// },
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
@@ -18,7 +30,7 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"jacobdufault.fuzzy-search"
+				"tomrijndorp.find-it-faster"
 			]
 		}
 	}

@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Launch Program",
+      "type": "chrome",
+      "request": "launch",
+      "cwd": "${workspaceRoot}",
+      "runtimeArgs": ["--remote-debugging-port=9222"]
+    },
+    {
+      "name": "Attach to url with files served from ./dist",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "url": "http://localhost:3000/",
+      "webRoot": "${workspaceFolder}/dist"
+    }
+  ]
+}

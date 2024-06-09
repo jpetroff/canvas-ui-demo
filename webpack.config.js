@@ -13,7 +13,7 @@ module.exports = (env, argv) => {
     mode: process.env.NODE_ENV || 'production',
     context: __dirname,
 
-    devtool: isProduction ? undefined : 'source-map',
+    devtool: isProduction ? void 0 : 'inline-source-map',
 
     entry: { 
       app: path.join(__dirname, sourceDir, 'demo/js', 'index.tsx')
@@ -25,6 +25,7 @@ module.exports = (env, argv) => {
       filename: 'js/[name].js',
       chunkFilename: '[chunkhash].[ext].map',
       sourceMapFilename: '[file].map',
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]'
     },
 
     devServer: {
@@ -81,6 +82,7 @@ module.exports = (env, argv) => {
   
     module: {
       rules: [
+        { test: /\.js$/, loader: 'source-map-loader', enforce: 'pre' },
         /* 
           SVG
         */

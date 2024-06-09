@@ -507,14 +507,14 @@ export const FScript = React.forwardRef<HTMLDivElement, IScriptField>(
 			console.log(`ch conn`, connector)
 			let newChoices = Array.from(choices)
 			newChoices[index].dest = connector
+			handleChange({
+				choices: newChoices
+			})
 			if(connector == '___new-flow') {
 				onFlowAdd(sectionName)
 			} else {
 				onFlowAdd(sectionName, connector)
 			}
-			handleChange({
-				choices: newChoices
-			})
 		}
 
 		return (
