@@ -45,7 +45,8 @@ export const formMappings = {
 			value: [`Question: {{user}}`, `Response:`].join(String.fromCharCode(13, 13)),
 			variables: [`[INST] {{sytem}} [/INST]`, 'Context: {{context}}', 'Question: {{user}}', 'Response:'],
 			hasContext: false, 
-			hasSystem: false
+			hasSystem: false,
+			autogenerate: true
 		}
 	},
 	'ai-add-context': {

@@ -1,4 +1,4 @@
-import { Card, TextArea, Text, TextField, Select, RadioCards, Box, DataList, Flex, Tooltip, IconButton, Button } from '@radix-ui/themes'
+import { Card, TextArea, Text, TextField, Select, RadioCards, Box, DataList, Flex, Tooltip, IconButton, Button, Checkbox, Switch } from '@radix-ui/themes'
 import { QuestionMarkIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import * as React from 'react'
 import Field from '@components/field'
@@ -195,18 +195,28 @@ export interface IPromptTemplateForm {
 	placeholder: string
 	onFormChange: (props: any) => void
 	className?: string
+	autogenerate: boolean
 }
 
 export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTemplateForm>( (
 	props, forwardRef
 ) => {
 	const {
-		value, placeholder, onFormChange, className, variables, hasContext, hasSystem, ...intrinsicProps
+		value, placeholder, onFormChange, className, variables, hasContext, hasSystem, autogenerate, ...intrinsicProps
 	} = props
 
 	function handleChange(value) {
 		props.onFormChange(
 			{
+				value: value
+			}
+		)
+	}
+
+	function toggleAutogenerate() {
+		props.onFormChange(
+			{
+				autogenerate: !autogenerate,
 				value: value
 			}
 		)
@@ -257,25 +267,24 @@ export const PromptTemplateForm = React.forwardRef<HTMLDivElement, IPromptTempla
 			</DataList.Root>
 		</Field>
 		
-		<Field>
-			<span>Prompt template</span>
-			<CodeMirror 
+		<Field nolabel>
+			<div className='flex flex-col gap-2'>
+				<div className='flex-grow'>Prompt template</div>
+				<label className='flex gap-2 font-normal'>
+					<Switch checked={autogenerate} onClick={() => toggleAutogenerate()} size="1" />  Generate automatically 
+				</label>
+			</div>
+			<CodeMirror
+				readOnly={autogenerate}
 				value={value} onChange={handleChange}
 				placeholder={placeholder}
 				basicSetup={options}
 				theme={xcodeDark}
 				height='auto'
 				minHeight='96px'
-				className='codemirror-theme font-mono text-xs'
+				className='codemirror-theme font-mono text-xs cursor-auto'
 			/>
 		</Field>
-
-		<Field>
-			<Button size="2" variant="soft" className='cursor-pointer'>
-				Generate automatically
-			</Button>
-		</Field>
-
 	</Card>
 })
 

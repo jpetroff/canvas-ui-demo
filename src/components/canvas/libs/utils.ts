@@ -151,7 +151,7 @@ export const epsEqual = (
 	return Math.abs(p1 - p2) <= delta
 }
 
-export const bezierControlPoint = (p: TConnectorPoint, w: number, h: number, offset: number = 0) : [number, number] => {
+export const bezierControlPoint = (p: TConnectorPoint, w: number, h: number, offset: number = 0, e: TConnectorPoint) : [number, number] => {
 	let newX = p.x + offset
 	let newY = p.y + offset
 
@@ -187,6 +187,20 @@ export const bezierControlPoint = (p: TConnectorPoint, w: number, h: number, off
 		newX += w
 	}
 
+	if(
+		(p.vector == ConnectorAttachmentType.left && (e.x > p.x + 8) && (e.y < p.y)) || 
+		(p.vector == ConnectorAttachmentType.right && (e.x < p.x + 8) && (e.y < p.y))
+	) {
+		newY -= h*1.4
+	}
+
+	if(
+		(p.vector == ConnectorAttachmentType.left && (e.x > p.x + 8) && (e.y > p.y)) || 
+		(p.vector == ConnectorAttachmentType.right && (e.x < p.x + 8) && (e.y > p.y))
+	) {
+		newY += h*1.4
+	}
+ 
 	return [newX, newY]
 }
 

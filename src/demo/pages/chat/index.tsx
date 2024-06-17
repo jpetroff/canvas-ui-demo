@@ -243,8 +243,6 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 														item.type == 'note' ? <Note message={item.message} onChange={(value) => handleNoteChange(index, value)} onRemove={() => handleNoteChange(index, '', true)} /> :
 														null
 						return <Canvas.Container {...item} absolute={true} extra={true} sticky={true}>
-							{/* {item.type == 'comment' && <CommentBubble onChange={(value) => handleCommentChange(index, value)} />} */}
-							{/* {item.type == 'note' && <Note message={item.message} onChange={(value) => handleNoteChange(index, value)} onRemove={() => handleNoteChange(index, '', true)} />} */}
 							{content}
 						</Canvas.Container>
 					}

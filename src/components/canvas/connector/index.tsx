@@ -65,8 +65,8 @@ const Connector = React.memo<IConnectorProps>(
 					(props.end.y + padding)
 				]
 
-				const cpStart = bezierControlPoint(props.start, ctx.canvas.width / 2, ctx.canvas.height / 2, padding)
-				const cpEnd = bezierControlPoint(props.end, ctx.canvas.width / 2, ctx.canvas.height / 2, padding)
+				const cpStart = bezierControlPoint(props.start, ctx.canvas.width / 2, ctx.canvas.height / 2, padding, props.end)
+				const cpEnd = bezierControlPoint(props.end, ctx.canvas.width / 2, ctx.canvas.height / 2, padding, props.start)
 
 				ctx.moveTo(...start)
 				if(props.h >= 16) {
