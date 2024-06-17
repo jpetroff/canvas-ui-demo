@@ -79,7 +79,9 @@ declare type TContainerList = (HTMLElement & TCanvasContainerElement)[]
 
 declare type TConnectorPath = {
 	from: string,
-	to: string
+	to: string,
+	startOrientation?: ChildConnectorOrientation
+	endOrientation?: ChildConnectorOrientation
 }
 
 type TConnectorPathList = TConnectorPath[]

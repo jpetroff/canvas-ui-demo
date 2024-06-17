@@ -1,0 +1,61 @@
+.comment-bubble-wrapper {
+	transition: width 0.1s ease 0.1s, height 0.1s ease 0.1s;
+}
+
+.comment-bubble-wrapper:hover {
+	width: 164px;
+	height: 32px;
+}
+.avatar-trigger img {
+	pointer-events: none;
+	width: 32px;
+	height: 32px;
+}
+
+.comment-expanded-name {
+	height: 1rem;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	word-break: keep-all;
+	display: flex;
+	visibility: hidden;
+	flex-grow: 1;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 600;
+	flex-shrink: 1;
+	width: 0;
+	opacity: 0;
+}
+
+.comment-expanded-message {
+	height: 1rem;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	word-break: keep-all;
+	display: flex;
+	flex-grow: 1;
+	visibility: hidden;
+	flex-shrink: 1;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 400;
+	width: 0;
+	opacity: 0;
+}
+
+.comment-bubble-wrapper:hover .comment-expanded-name {
+	display: flex;
+	visibility: visible;
+	width: auto;
+	opacity: 1;
+	transition: visibility 0.1s ease 0.1s, width 0.1s ease 0.1s;
+}
+
+.comment-bubble-wrapper:hover .comment-expanded-message {
+	display: flex;
+	visibility: visible;
+	width: auto;
+	opacity: 1;
+	transition: visibility 0.1s ease 0.1s, width 0.1s ease 0.1s;
+}

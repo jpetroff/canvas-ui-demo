@@ -11,6 +11,7 @@ import { extend, filter, findIndex, map } from 'lodash'
 
 import useLocalStorage from '../../js/utils'
 import Toolbar from '@apps/toolbar'
+import Note from '@components/note'
 
 interface IAppProps {
 	router?: RouteObject
@@ -22,6 +23,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 
 	const [storedDescriptors, storeDescriptors, removeDescriptors] = useLocalStorage<IContainerDescriptorCollection>('test-app-storage-descriptors')
 	const [storedConnectors, storeConnectors, removeConnectors] = useLocalStorage<TConnectorPathList>('test-app-storage-connectors')
+	const [notes, setNotes] = useLocalStorage<string[]>('test-app-notes', [])
 
 	const containersInitvalue = [
 		<Canvas.Container swappable={true} canvasKey='entry-form'>
@@ -72,7 +74,7 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			setContainers([
 				...containers,
 				<Canvas.Container extra={true} sticky={true} canvasKey={`${key}`}>
-					<CommentBubble initials='J' />
+					<CommentBubble initials='J' name='Jon Snow' message='Put your word here' />
 				</Canvas.Container>
 			])
 			setContainerCoordinates(
@@ -82,11 +84,13 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 			)
 			setAddMode(null)
 		} else if (type == 'note') {
-			const key = `note-${Math.round(Math.random() * 100)}`
+			const lastIndex = notes.length
+			const key = `note-${lastIndex}`
+			notes.push('New note')
 			setContainers([
 				...containers,
-				<Canvas.Container extra={true} sticky={true} stickTo='entry-form-3' canvasKey={`${key}`}>
-					<Box className='absolute bg-yellow-200 rounded-md w-[96px] h-[96px] shadow-md flex items-center text-center text-sm'>Don’t forget this</Box>
+				<Canvas.Container extra={true} sticky={true} canvasKey={`${key}`}>
+					<Note message={notes[lastIndex]} onChange={(value) => handleNoteChange(value, lastIndex)}/>
 				</Canvas.Container>,
 			])
 			setContainerCoordinates(
@@ -94,8 +98,14 @@ const PIndex: React.FunctionComponent<IAppProps> = (props) => {
 					[`${key}`]: coords
 				})
 			)
+			setNotes(notes)
 			setAddMode(null)
 		}
+	}
+
+	function handleNoteChange(value, index) {
+		notes[index] = value
+		setNotes(notes)
 	}
 
 	function handleContainerSwap(event) {

@@ -217,7 +217,9 @@ export const FChoice = React.forwardRef<HTMLDivElement, IChoiceField>(
 		}
 
 		function handleFlowAdd(from: string) {
-			props.onFieldChange({}, {from})
+			props.onFieldChange({
+				choices: props.choices
+			}, {from})
 		}
 
 		return <Field nolabel>
@@ -268,7 +270,6 @@ FChoice.displayName = 'FChoice'
 
 export interface IReplyField extends IField {
 	choices: {value: string, connectorName?: string}[]
-	script: string
 	hasChoices: boolean
 	save: boolean
 	variable: string
@@ -316,7 +317,12 @@ export const FReply = React.forwardRef<HTMLDivElement, IReplyField>(
 		}
 
 		function handleFlowAdd(from: string) {
-			props.onFieldChange({}, {from})
+			props.onFieldChange({
+				variable: props.variable,
+				hasChoices: props.hasChoices,
+				save: props.save,
+				choices: props.choices
+			}, {from})
 		}
 
 		return <Field nolabel>

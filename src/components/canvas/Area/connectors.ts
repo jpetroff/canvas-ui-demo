@@ -80,8 +80,21 @@ export function createConnectors(
 			const endElemHasParent = endElem.closest(`[data-canvas-container]`) != endElem && endElem.closest(`[data-canvas-container]`)
 			// const endElemParent = endElemHasParent ? containerCoordinatesCollection[endElemHasParent.getAttribute('data-canvas-key')] : null
 
-			const [startContainer, startAttachment] = getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
-			const [endContainer, endAttachment] = getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemHasParent ? ChildConnectorOrientation.horizontal : ChildConnectorOrientation.self)
+			const startElemOrientation = connector.startOrientation ? 
+				connector.startOrientation :
+					startElemHasParent ? 
+						ChildConnectorOrientation.horizontal : 
+						ChildConnectorOrientation.self
+
+			const [startContainer, startAttachment] = getRealConnectorPoints(startElem, canvasOffset, startElemHasParent, startElemOrientation)
+
+			const endElemOrientation = connector.endOrientation ? 
+				connector.endOrientation :
+					endElemHasParent ? 
+						ChildConnectorOrientation.horizontal : 
+						ChildConnectorOrientation.self
+
+			const [endContainer, endAttachment] = getRealConnectorPoints(endElem, canvasOffset, endElemHasParent, endElemOrientation)
 
 			// console.log('Coords', startContainer, endContainer)
 			// console.log('attachment', startElemHasParent, startAttachment, endElemHasParent, endAttachment)
