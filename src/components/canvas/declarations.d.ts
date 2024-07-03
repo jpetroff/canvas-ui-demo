@@ -52,6 +52,10 @@ declare type TContainerDescriptorPropItem = {
 		width: number
 		height: number
 	}
+	offset?: {
+		left: number
+		top: number
+	}
 	[key: any]: any
 }
 

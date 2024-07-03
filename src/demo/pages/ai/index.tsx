@@ -24,12 +24,14 @@ function createRandomString(length) {
 
 
 const initValue = [
+	formMappings['ai-onboarding-checklist'].props,
 	formMappings['ai-intent-form'].props,
 	formMappings['ai-choose-model'].props,
 	formMappings['ai-system-prompt-placeholder'].props,
 	formMappings['ai-prompt-template'].props,
 	formMappings['ai-add-context-placeholder'].props,
-	formMappings['ai-user-prompt'].props
+	formMappings['ai-user-prompt'].props,
+	formMappings['ai-final-step'].props
 ]
 
 const initConnectors = [
@@ -38,20 +40,41 @@ const initConnectors = [
 	{from: 'ai-user-prompt', to: 'var-user-prompt'},
 	{from: 'ai-add-context', to: 'var-context-prompt'},
 	{from: 'ai-prompt-template', to: 'ai-choose-model'},
+	{from: 'ai-choose-model', to: 'ai-final-step'}
 ]
 
 const gridCoords = {
+	'ai-onboarding-checklist': { col: 1, row: 1,	colSpan: 6,	rowSpan: 1, absolute: false},
 	'ai-intent-form': { col: 1, row: 2,	colSpan: 4,	rowSpan: 1, absolute: false},
 	'ai-user-prompt': { col: 1, row: 3,	colSpan: 4,	rowSpan: 2, absolute: false},
-	'ai-add-context': { col: 1, row: 5,	colSpan: 4,	rowSpan: 1, absolute: false},
-	'ai-system-prompt': { col: 1, row: 6,	colSpan: 4,	rowSpan: 1, absolute: false},
 
 	'ai-choose-model': { col: 6, row: 2,	colSpan: 4,	rowSpan: 2, absolute: false},
 	'ai-prompt-template': { col: 6, row: 4,	colSpan: 4,	rowSpan: 3, absolute: false},
 
+	'ai-add-context': { col: 1, row: 5,	colSpan: 4,	rowSpan: 1, absolute: false},
+	'ai-system-prompt': { col: 1, row: 6,	colSpan: 4,	rowSpan: 1, absolute: false},
+
 	'ai-add-context-placeholder': { col: 1, row: 5,	colSpan: 4,	rowSpan: 1, absolute: false},
 	'ai-system-prompt-placeholder': { col: 1, row: 6,	colSpan: 4,	rowSpan: 1, absolute: false},
+
+	'ai-final-step': {col: 11, row: 2, colSpan: 4, rowSpan: 4, absolute: false},
+
+	'ai-note-onboarding-publish': {sticky: true, stickTo: 'ai-final-step', height: 269, relative: {left: 1376, top: 328}, offset: {left: 1376, top: 328} },
+	'ai-note-onboarding-system': {sticky: true, stickTo: 'ai-system-prompt-placeholder', height: 269, relative: {left: 426, top: 803}, offset: {left: 426, top: 803} }
 }
+
+const initExtras : any[] = [
+	{
+		canvasKey: 'ai-note-onboarding-publish',
+		message: 'If you want to publish, you can just skip validation',
+		type: 'note'
+	},
+	{
+		canvasKey: 'ai-note-onboarding-system',
+		message: 'Optional instruction to the model about the answer',
+		type: 'note'
+	}
+]
 
 interface IAIPageProps { 
 
@@ -64,7 +87,7 @@ interface IExtendedCoordinates extends TContainerDescriptor {
 const PageAi: React.FunctionComponent<IAIPageProps> = (props) => {
 	const [containerCoordinates, setContainerCoordinates, removeCoordinates] = useLocalStorage<Dictionary<IExtendedCoordinates>>('ai-page-coordinates',gridCoords)
 	const [forms, setForms, removeForms] = useLocalStorage<any[]>('ai-page-content', initValue)
-	const [extras, setExtras, removeExtras] = useLocalStorage('ai-page-extras', [])
+	const [extras, setExtras, removeExtras] = useLocalStorage('ai-page-extras', initExtras)
 	const [connectors, setConnectors, removeConnectors] = useLocalStorage('ai-page-connectors', initConnectors)
 	const [scale, setScale] = React.useState(1)
 	const [addMode, setAddMode] = React.useState(null)
@@ -73,11 +96,27 @@ const PageAi: React.FunctionComponent<IAIPageProps> = (props) => {
 		const templateIndex = findIndex(current, {canvasKey: 'ai-prompt-template'})
 		const contextIndex = findIndex(current, {canvasKey: 'ai-add-context'})
 		const systemPropmptIndex = findIndex(current, {canvasKey: 'ai-system-prompt'})
+		const modelFormIndex = findIndex(current, {canvasKey: 'ai-choose-model'})
+		const userPromptIndex = findIndex(current, {canvasKey: 'ai-user-prompt'})
 		console.log(`context check`, templateIndex, contextIndex)
 		if( templateIndex != -1 ) {
 			current[templateIndex].hasContext = contextIndex != -1 ? true : false
 			current[templateIndex].hasSystem = systemPropmptIndex != -1 ? true : false
+			if(current[templateIndex].autogenerate) {
+				current[templateIndex].value = [
+					systemPropmptIndex != -1 ? `[INST] {{system}} [/INST]\n\n` : ``,
+					contextIndex != -1 ? `{{context}}\n\n` : ``,
+					`Question: {{user}}\n\n`,
+					`Answer:`
+				].join(``)
+			}
+		}
 
+		const onboardingIndex = findIndex(current, {canvasKey: 'ai-onboarding-checklist'})
+		if(onboardingIndex != -1) {
+			current[onboardingIndex].model = !!current[modelFormIndex].model
+			current[onboardingIndex].prompt = current[userPromptIndex].value != ''
+			current[onboardingIndex].context = contextIndex != -1 && (current[contextIndex].url != '' || current[contextIndex].dataset != '') && current[contextIndex].embedding != ''
 		}
 	}
 
@@ -239,7 +278,7 @@ const PageAi: React.FunctionComponent<IAIPageProps> = (props) => {
 			scale={scale} addMode={addMode} 
 			onScaleChange={(scale) => setScale(scale)} 
 			onAddMode={(type) => setAddMode(type)}
-			onReset={() => {setContainerCoordinates(gridCoords); setExtras([]); setForms(initValue)} }
+			onReset={() => {setContainerCoordinates(gridCoords); setExtras(initExtras); setForms(initValue); setConnectors(initConnectors)} }
 		/>
 	</>)
 }

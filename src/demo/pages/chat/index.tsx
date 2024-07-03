@@ -1,7 +1,7 @@
 import useLocalStorage from '../../js/utils'
 import * as React from 'react'
 import Toolbar from '@apps/toolbar'
-import Canvas from '@components/canvas'
+import Canvas, { getAbsoluteCoordinates } from '@components/canvas'
 import { formMappings } from './form-setup'
 import { Dictionary, cloneDeep, each, extend, filter, find, findIndex, findLast, max } from 'lodash'
 import './style.css' 
@@ -22,8 +22,10 @@ const initConnectors = [
 
 ]
 
+const initCoords = getAbsoluteCoordinates({}, {distance: 64, width: 312, height: 144})
+
 const gridCoords = {
-	'chat-flow-start': { col: 1, row: 1,	colSpan: 1,	rowSpan: 1, absolute: false}
+	'chat-flow-start': { relative: initCoords, offset: initCoords }
 }
 
 interface IChatPageProps { 
@@ -39,12 +41,9 @@ function createRandomString(length) {
   return result;
 }
 
-interface IExtendedCoordinates extends TContainerDescriptor {
-	col?: number, row?: number,	colSpan?: number,	rowSpan?: number
-}
 
 const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
-	const [containerCoordinates, setContainerCoordinates, removeCoordinates] = useLocalStorage<Dictionary<IExtendedCoordinates>>('chat-page-coordinates',gridCoords)
+	const [containerCoordinates, setContainerCoordinates, removeCoordinates] = useLocalStorage<Dictionary<TContainerDescriptor>>('chat-page-coordinates',gridCoords)
 	const [forms, setForms, removeForms] = useLocalStorage<any[]>('chat-page-content', initValue)
 	const [extras, setExtras, removeExtras] = useLocalStorage('chat-page-extras', [])
 	const [connectors, setConnectors, removeConnectors] = useLocalStorage('chat-page-connectors', initConnectors)
@@ -106,19 +105,18 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 			updatedForms.push(
 				formMappings['default'](updatedForms.length).props
 			)
-			const prevItem = updatedForms[lastIndex - 1]
 
-			const newCol = (updatedCoords[container || prevItem.canvasKey].col || 0) + 1
-			const _lastColItem = findLast(updatedCoords, {col: newCol}) || {row:0}
-			const _currRow = updatedCoords[container].row
-			const _checkSpaceNext = findLast(updatedCoords, {col: newCol, row: _currRow})
-
+			const newOffset = getAbsoluteCoordinates(updatedCoords, {
+				width: 312,
+				height: 144,
+				adjacent: (container && updatedCoords[container]) || void 0,
+				distance: 64
+			})
 			updatedCoords[updatedForms[lastIndex].canvasKey] = {
-				col: (updatedCoords[container || prevItem.canvasKey].col || 0) + 1,
-				row: _checkSpaceNext ? _lastColItem.row + 1 : _currRow,
-				colSpan: 1,
-				rowSpan: 1
+				offset: newOffset,
+				relative: newOffset
 			}
+
 			updatedConnectors.push({
 				from,
 				to: `${updatedForms[lastIndex].canvasKey}~top`
@@ -213,21 +211,22 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 			scale={scale}
 			containerCoordinates={containerCoordinates}
 			connectors={connectors}
-			onLayoutChange={(newLayout) => { console.log(`New layout:`, newLayout); setContainerCoordinates(newLayout as Dictionary<IExtendedCoordinates>) } }
+			onLayoutChange={(newLayout) => { console.log(`New layout:`, newLayout); setContainerCoordinates(newLayout) } }
 			// onOrderChange={(event) => { handleContainerSwap(event) } }
 			className="bg-transparent rounded-lg border border-slatedark-6"
 			addMode={!!addMode} 
 			onPlaceAdd={(coords) => handleContainerAdd(addMode, coords)}
 			scroll={<Canvas.Scroller />}
 		>
-			<Canvas.Layout className='grid grid-flow-cols auto-cols-[20rem] grid-flow-rows gap-16 p-16 items-start'>
+			<Canvas.Layout className=''>
 				{forms.map( (_props, index) => {
 					const props = cloneDeep(_props)
 					const ContainerComponent = ChatBlock as any //formMappings[props.canvasKey].component
-					props.className = `${props.className || ''} ${createGridClass(containerCoordinates[props.canvasKey])}`
+					props.className = `${props.className || ''}`
 					return (
-						<Canvas.Container blockId={props.canvasKey} {...props}>
+						<Canvas.Container blockId={props.canvasKey} {...props} absolute={true}>
 							<ContainerComponent 
+								className={`w-[312px]`}
 								onFormChange={ (value, flow) => handleFormChange(props.canvasKey, value, flow) }
 								onFlowRemove={ (value) => handleFormRemove(index) }
 								existingFlows={ forms.map( (form) => { return {key: form.canvasKey, name: String(form.canvasKey).replace(/-/ig, ' ')} } )}
@@ -260,12 +259,3 @@ const PageChat: React.FunctionComponent<IChatPageProps> = (props) => {
 }
 
 export default PageChat 
-
-function createGridClass( {col, row, colSpan, rowSpan}: {col?:number, row?: number, colSpan?:number, rowSpan?: number} ) : string {
-	return [
-		`col-start-${col || 1}`,
-		`row-start-${row || 1}`,
-		`col-span-${colSpan || 1}`,
-		`row-span-${rowSpan || 1}`,
-	].join(' ')
-}

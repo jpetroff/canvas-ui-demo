@@ -15,6 +15,7 @@ import Scroller from './Scroller'
 import Layout from './Layout'
 import Extras from './Extras'
 import { publicHelpers as recalcHelpers } from './Area/recalc'
+import { getAbsoluteCoordinates } from './Layout/get-coordinates'
 
 export enum CanvasOrderPositionType {
 	after = 'after',
@@ -120,4 +121,5 @@ Canvas.displayName = 'Canvas'
 
 export default Canvas
 
-export const swapContainerCoordinates = recalcHelpers.swapContainerCoordinates
+const swapContainerCoordinates = recalcHelpers.swapContainerCoordinates
+export { getAbsoluteCoordinates, swapContainerCoordinates }

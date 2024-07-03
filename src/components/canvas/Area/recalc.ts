@@ -24,7 +24,11 @@ export function recalc(
 				resizable: container.resizable,
 				swappable: container.swappable,
 				width: upscale(container.width, scale),
-				height: upscale(container.height, scale)
+				height: upscale(container.height, scale),
+				offset: {
+					left: upscale(container.offset.left, scale),
+					top: upscale(container.offset.top, scale),
+				}
 			}
 
 			if(container.absolute || container.extra) {

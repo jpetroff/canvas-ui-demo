@@ -92,7 +92,8 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		console.log('------------------- from mount ----------------')
 		console.log(globalContext, updateContext, selfRef)
 		const areaRects = selfRef.current.getBoundingClientRect()
-		const dimensions = calcBoundingDimensions(selfRef.current, measureContainers(selfRef.current, globalContext.descriptors, globalContext.area))
+		const measuredContainers = measureContainers(selfRef.current, globalContext.descriptors, globalContext.area)
+		const dimensions = calcBoundingDimensions(selfRef.current, measuredContainers)
 		const paddings = getExtraPaddings(selfRef.current, dimensions)
 		resizeCanvas(selfRef.current, paddings)
 		console.log(`Mount paddings:`, paddings, dimensions)
@@ -108,23 +109,12 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		})
 		console.log(`isGlobalContext mutated?`, globalContext)
 		if(props.onMount && isFunction(props.onMount)) props.onMount()
-	})
-
-	useResizeObserver(selfRef, () => {
-		// const areaRects = selfRef.current.getBoundingClientRect()
-		// const dimensions = calcBoundingDimensions(selfRef.current, measureContainers(selfRef.current, globalContext.descriptors, globalContext.area))
-		// const paddings = resizeCanvas(selfRef.current, dimensions)
-		// updateContext({
-		// 	type: ContextEventType.resize,
-		// 	value: {
-		// 		top: areaRects.top,
-		// 		left: areaRects.left,
-		// 		width: areaRects.width,
-		// 		height: areaRects.height,
-		// 		dragObjectKey: null,
-		// 		padding: paddings
-		// 	}
-		// })
+		if(props.onLayoutChange && isFunction(props.onLayoutChange)) {
+			const updatedProps = recalc(measuredContainers, cloneDeep(globalContext))
+			props.onLayoutChange( 
+				merge({}, globalContext.descriptors, updatedProps)
+			)
+		}
 	})
 
 	function updateContainerCoordinates(newContainerDescriptorCollection: TContainerMeasureDict) {
@@ -221,8 +211,14 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 						container.stickTo == dragObjectKey
 					) {
 						console.log('Updated container', key)
-						container.relative.left = container.relative.left + upscale(dX, globalContext.area.scale)
-						container.relative.top = container.relative.top + upscale(dY, globalContext.area.scale)
+						container.relative = {
+							left: container.relative.left + upscale(dX, globalContext.area.scale),
+							top: container.relative.top + upscale(dY, globalContext.area.scale)
+						}
+						container.offset = {
+							left: container.offset.left + upscale(dX, globalContext.area.scale),
+							top: container.offset.top + upscale(dY, globalContext.area.scale)
+						}
 					}
 					result[container.key] = container
 					return result
@@ -357,7 +353,7 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 															'select-auto cursor-auto'
 
 	const addModeClass = 	globalContext.area.addMode ? 
-												'canvas-container-add-mode' :
+												'canvas-container-add-mode after:bg-indigodark-1/60 after:backdrop-blur-[1px]' :
 												''
 
 	console.log(`area debug`, globalContext)
@@ -368,14 +364,6 @@ const Area = React.forwardRef<HTMLDivElement, IAreaProps>((props, ref) => {
 		onMouseUp={handleDragEnd}
 		onMouseLeave={handleDragEnd}
 		onClick={ globalContext.area.addMode ? handleClick : undefined }
-		// style={
-		// 	// {
-		// 	// 	paddingTop: globalContext.area.padding?.top || 0,
-		// 	// 	paddingLeft: globalContext.area.padding?.left || 0,
-		// 	// 	paddingBottom: globalContext.area.padding?.bottom || 0,
-		// 	// 	paddingRight: globalContext.area.padding?.right || 0,
-		// 	// }
-		// }
 	>
 		<div data-canvas-content style={
 			{

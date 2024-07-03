@@ -207,10 +207,10 @@ const PageAuto: React.FunctionComponent<IAutoPageProps> = (props) => {
 			onPlaceAdd={(coords) => handleContainerAdd(addMode, coords)}
 			scroll={<Canvas.Scroller />}
 		>
-			<Canvas.Layout className='flex flex-col gap-16 p-16'>
+			<Canvas.Layout className='flex flex-col gap-16 p-16 justify-start'>
 				{mapRow<any>(forms, containerCoordinates, (rowItems, rowKey) => {
 					return (
-						<Flex direction="row" justify="center" align="start" className="gap-16">
+						<Flex direction="row" justify="start" align="start" className="gap-16 flex-grow-1">
 						{
 							rowItems.map( 
 								(props) => {

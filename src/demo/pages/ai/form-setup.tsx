@@ -1,7 +1,17 @@
 import React from "react"
-import { IntentForm, ModelForm, SystemPromptForm, PromptTemplateForm, AddContextForm, UserPromptForm, PlaceholderCard } from "./forms"
+import { IntentForm, ModelForm, SystemPromptForm, PromptTemplateForm, AddContextForm, UserPromptForm, PlaceholderCard, FinalCard, OnboardingForm } from "./forms"
 
 export const formMappings = {
+	'ai-onboarding-checklist': {
+		component: OnboardingForm,
+		props: {
+			canvasKey: 'ai-onboarding-checklist',
+			model: false,
+			prompt: false,
+			validator: false,
+			context: false
+		}
+	},
 	'ai-intent-form': {
 		component: IntentForm,
 		props: {
@@ -90,5 +100,12 @@ export const formMappings = {
 			value: 'ai-add-context',
 			text: 'Add context'
 		}
+	},
+	'ai-final-step': {
+		component: FinalCard,
+		props: {
+			canvasKey: 'ai-final-step',
+			result: 'test'
 	}
+}
 }

@@ -1,6 +1,6 @@
 import AddConnector from '@apps/add-connection'
 import Field from '@components/field'
-import { Badge, Button, Card, CardProps, DropdownMenu, Flex, IconButton, SegmentedControl, Select, TextArea, TextField } from '@radix-ui/themes'
+import { Badge, Button, Card, CardProps, DropdownMenu, Flex, IconButton, SegmentedControl, Select, Text, TextArea, TextField } from '@radix-ui/themes'
 import { concat, find, isArray, omit } from 'lodash'
 import * as React from 'react'
 import { DATABASE_LIST, DATABASE_PROPS, fieldOp, fieldType } from './form-setup'
@@ -56,8 +56,13 @@ export const StartBlock = React.forwardRef<HTMLDivElement, IStartBlock>(
 		}
 
 		return <Card ref={forwardRef} className={`${className || ''} py-5 px-5 flex flex-col gap-3`} {...intrinsicProps}>
+			<Flex direction={`row`}>
+				<Text size="2">
+					<Badge size="1" color="amber">#Employee#</Badge>&nbsp;requests&nbsp;<Badge color="amber" size="1">#Absense days#</Badge>
+				</Text>
+			</Flex>
 			<Field>
-				Scenario
+				Scenario name
 				<TextField.Root value={scenario} onChange={handleChange} />
 			</Field>
 			<AddConnector

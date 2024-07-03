@@ -44,7 +44,7 @@ export const DATABASE_LIST = [
 
 export const DATABASE_PROPS = {
 	'd1': ['Monthly salary', 'Annual salary', 'Overtime pay', 'Bonuses total'],
-	'd2': ['Accrued holidays', 'Sick leave days', 'Unpaid leave days', 'Working hours per week', 'Employment start'],
+	'd2': ['Accrued holidays', 'Sick leave days', 'Unpaid leave days', 'Working hours per week', 'Employment start', 'Approved absense', 'Requested absense'],
 	'd3': [],
 	'd4': ['Employee superior', 'Payroll category', 'Employee department', 'Employee reports', 'Contract type'],
 }
@@ -60,6 +60,11 @@ export function fieldType(field: string) {
 	)
 		return 'user'
 
+	if(
+		['Approved absense', 'Requested absense'].indexOf(field) != -1
+	)
+		return 'date'
+
 	return 'number'
 }
 
@@ -68,6 +73,7 @@ export function fieldOp(type?: string) {
 		case 'string': return ['equal', 'contains', 'not empty', 'empty'];
 		case 'number': return ['=', '>', '<', 'not empty'];
 		case 'user': return ['not empty'];
+		case 'date': return ['not empty', 'overlap with', 'not overlap with', 'total days >', 'total days <'];
 		default: return ['equal', 'contains', 'not empty', 'empty', '=', '>', '<']
 	}
 }

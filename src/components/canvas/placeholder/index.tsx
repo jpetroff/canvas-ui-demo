@@ -6,7 +6,7 @@ interface IPlaceholderProps extends React.HTMLProps<HTMLDivElement> {
 const Placeholder = React.forwardRef<HTMLDivElement, IPlaceholderProps> ((props, ref) => {
 	const { className,  ...elementProps } = props
 	return <div ref={ref} {...elementProps}
-		className={`${props.className || ''} bg-blue-100 ring-2 ring-blue-800 opacity-20 absolute hidden z-[9999999]`}
+		className={`${props.className || ''} rounded-md bg-indigodark-5/30 ring-2 ring-indigodark-6/70 absolute hidden z-[9999999]`}
 	>&nbsp;</div>
 });
 
